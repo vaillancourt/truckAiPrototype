@@ -30,6 +30,27 @@ function Common.vector_print(x, y, name)
     end
 end
 
+function Common.equivalent(v1, v2, epsilon)
+    epsilon = epsilon or 0.000001
+
+    if v2 > v1 then 
+        return ((v2 - v1) <= epsilon) 
+    end
+    if v1 > v2 then 
+        return ((v1 - v2) <= epsilon) 
+    end
+    -- if v1 == v2 then 
+    return true
+end
+
+function Common.zero_near_zero(value, epsilon)
+    if Common.equivalent(0, value, epsilon) then
+        return 0
+    end
+
+    return value
+end
+
 function Common.kmh_to_mps(kmh)
     return kmh * 1000 / 3600
 end

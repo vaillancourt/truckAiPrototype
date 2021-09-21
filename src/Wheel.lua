@@ -10,6 +10,7 @@ local Wheel = {
     max_forward_speed = Common.kmh_to_mps(35),
     max_backward_speed = Common.kmh_to_mps(30),
     max_drive_force = 1,
+    max_brake_force = 300,
     max_lateral_impulse = 0.1,
     max_torque = 15,
     body = nil,
@@ -19,8 +20,9 @@ local Wheel = {
     -- the width is the width of the wheel, in y
     -- length is the length of the wheel, in x
     -- Assuming the truck is facing "right"/x+
-    width = 02.5, 
-    length = 07.5, }
+    width = 0.25, 
+    length = 0.75,
+    debug = false, }
 Wheel.__index = Wheel
 
 function Wheel.new(world, x, y)
@@ -63,11 +65,20 @@ function Wheel.get_forward_velocity(self)
     local local_forward_x, local_forward_y = self.body:getWorldVector( 1, 0 )
     local lin_vel_x, lin_vel_y = self.body:getLinearVelocity( )
     local dot = Common.dot_product(local_forward_x, local_forward_y, lin_vel_x, lin_vel_y)
-    return dot * local_forward_x, dot * local_forward_y
+    if self.debug then
+        --Common.vector_print(local_forward_x, local_forward_y, "local_forward")
+        --Common.vector_print(lin_vel_x, lin_vel_y, "lin_vel")
+        --print("dot " .. dot)
+    end
+    local direction = 1
+    if dot < 0 then
+        direction = -1
+    end
+    return dot * local_forward_x, dot * local_forward_y, direction
 end
 
 
-function Wheel.update_friction(self)
+function Wheel.update_friction(self, dt, brake_control)
 
     do
         --    //lateral linear velocity
@@ -92,12 +103,15 @@ function Wheel.update_friction(self)
 
     do
         --    //forward linear velocity
-        -- local forward_vel_x, forward_vel_y = self:get_forward_velocity()
+        local forward_vel_x, forward_vel_y, direction = self:get_forward_velocity()
         local forward_dir_x, forward_dir_y, speed = Common.vector_normalize(self:get_forward_velocity())
-        if speed > 0 or speed < 0 then
+        if not Common.equivalent(speed, 0) then
             --Common.vector_print(forward_dir_x, forward_dir_y, "forward_dir")
-            local drag_force_magnitude = -0.2 * speed * self.body:getMass()
-            print("speed " .. speed)
+            local drag_force_magnitude = -8.0 * speed * self.body:getMass()
+            drag_force_magnitude = drag_force_magnitude - (speed / self.max_forward_speed) * (brake_control * self.max_brake_force)
+            if self.debug then
+            --    print("speed " .. direction * speed .. " speed|kmh " .. direction * Common.mps_to_kmh(speed))
+            end
             self.body:applyForce(drag_force_magnitude * forward_dir_x, drag_force_magnitude * forward_dir_y)
         end
     end
@@ -116,11 +130,13 @@ function Wheel.update_drive(self, dt, control)
     end 
 
     local local_forward_x, local_forward_y = self.body:getWorldVector( 1, 0 )
-    local forward_vel_x, forward_vel_y = self:get_forward_velocity()
-    local current_speed = Common.vector_length(forward_vel_x, forward_vel_y)
+    local forward_vel_x, forward_vel_y, direction = self:get_forward_velocity()
+    local current_speed = direction * Common.vector_length(forward_vel_x, forward_vel_y)
     local max_f = 200 * control
 
-    print("desired_speed " .. desired_speed .. " current_speed " .. current_speed)
+    if self.debug then
+        --print("desired_speed " .. desired_speed .. " current_speed " .. current_speed)
+    end
     if desired_speed > 0 and desired_speed > current_speed then
         self.body:applyForce( local_forward_x * max_f, local_forward_y * max_f)
     elseif desired_speed < 0 and desired_speed < current_speed then

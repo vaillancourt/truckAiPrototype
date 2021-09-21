@@ -16,20 +16,20 @@ local Truck = {
 
     -- the width is the width of the truck, in y
     -- length is the length of the truck, in x
-    width = 20, -- Assuming the truck is facing "right"/x+
-    length = 40,
+    width = 2.0, -- Assuming the truck is facing "right"/x+
+    length = 4.0,
 
     wheel_offset_x = 
-        (40  / 2) -- truck length / 2 
-        - (07.5 / 2), -- wheel length / 2
+        (4.0  / 2) -- truck length / 2 
+        - (0.75 / 2), -- wheel length / 2
     wheel_offset_y =
-        (20 / 2) -- truck width / 2 
-        - (02.5 / 2) + 02.5, -- wheel width / 2
+        (2.0 / 2) -- truck width / 2 
+        - (0.25 / 2) + 0.25, -- wheel width / 2
 
     wheels = {},
     joints = {},
 
-    front_angle_limit = 15 / 360 * 2 * math.pi
+    front_angle_limit = 25 / 360 * 2 * math.pi
     }
 Truck.__index = Truck
 
@@ -87,6 +87,8 @@ function Truck.new(world, x, y, angle_rad)
 
     self.joints[self.FRONT_LEFT]:setLimits(-self.front_angle_limit, self.front_angle_limit)
     self.joints[self.FRONT_RIGHT]:setLimits(-self.front_angle_limit, self.front_angle_limit)
+
+    self.wheels[self.FRONT_LEFT].debug = true
 
     return self
 end

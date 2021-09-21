@@ -1,6 +1,7 @@
 local Wheel = require "Wheel"
 local Waypoint = require "Waypoint"
 local Truck = require "Truck"
+local Common = require "Common"
 
 local window_width, window_height = 768, 768
 
@@ -39,11 +40,13 @@ end
 local iteration = 0
 
 function love.update(dt)
+    --print()
 
     iteration = iteration + 1
 
     local turn_control = ((iteration % 3600) / 3600 ) 
     local drive_control = (iteration % 480) / 480
+    local brake_control = 0
 
     if joystick then
         local values = {
@@ -54,8 +57,9 @@ function love.update(dt)
             triggerleft = joystick:getGamepadAxis("triggerleft"),
             triggerright = joystick:getGamepadAxis("triggerright")
         }
-        turn_control = values.rightx
-        drive_control = -values.lefty
+        turn_control = Common.zero_near_zero(values.rightx) 
+        drive_control = -Common.zero_near_zero(values.lefty)
+        brake_control = Common.zero_near_zero(values.triggerleft)
         --for key,value in pairs(values) do print(key,value) end
     end
 
@@ -64,7 +68,7 @@ function love.update(dt)
     --drive_control = 0
 
     for _, wheel in pairs(truck.wheels) do
-        wheel:update_friction()
+        wheel:update_friction(dt, brake_control)
         wheel:update_drive(dt, drive_control)
     end
     --print("turn_control " .. turn_control)
@@ -86,7 +90,7 @@ end
 function love.draw()
 
     love.graphics.push()
-    local scale = 1
+    local scale = 5
     love.graphics.scale(scale, scale)   -- reduce everything by 50% in both X and Y coordinates
 
     -- draw_waypoints()
