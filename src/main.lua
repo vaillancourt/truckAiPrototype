@@ -10,7 +10,6 @@ local window_width, window_height = 768, 768
 local waypoints = {}
 local truck = {}
 local world = nil
-local wheels = {}
 local joystick = nil
 
 function love.load(args)
@@ -25,12 +24,9 @@ function love.load(args)
         Waypoint.new(200, 150),
     }
 
-    -- truck = Truck.new(150, 150)
-
     -- No gravity since we're using a "top down view"
     world = love.physics.newWorld( 0, 0, false )
     truck = Truck.new(world, 50, 50)
-    -- table.insert(wheels, Wheel.new(world, 10, 10))
 
     local joysticks = love.joystick.getJoysticks()
     joystick = joysticks[1] or nil
@@ -71,19 +67,12 @@ function love.update(dt)
         wheel:update_friction(dt, brake_control)
         wheel:update_drive(dt, drive_control)
     end
-    --print("turn_control " .. turn_control)
 
     truck:update(dt, turn_control)
-    --if turn_control <= 0.05 then
-    --    truck.wheels[1]:update_turn(dt, turn_control)
-    --else
-    --    truck.wheels[1]:update_turn(dt, 0)
-    --end
+
     if true or love.keyboard.isDown('space') then
         world:update(dt)
     end
-
-
 end
 
 
@@ -91,10 +80,10 @@ function love.draw()
 
     love.graphics.push()
     local scale = 5
-    love.graphics.scale(scale, scale)   -- reduce everything by 50% in both X and Y coordinates
+    love.graphics.scale(scale, scale)
 
     -- draw_waypoints()
-    --draw_physics()
+    -- draw_physics()
     truck:draw()
 
     love.graphics.pop()
@@ -126,8 +115,6 @@ function draw_physics()
         end
     end
 end
-
-
 
 function love.keyreleased(key)
    if key == "escape" then
