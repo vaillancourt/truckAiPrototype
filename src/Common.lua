@@ -34,5 +34,8 @@ function Common.kmh_to_mps(kmh)
     return kmh * 1000 / 3600
 end
 
+function Common.mps_to_kmh(mps)
+    return mps * 3600 / 1000
+end
 
 return Common

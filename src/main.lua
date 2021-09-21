@@ -10,6 +10,7 @@ local waypoints = {}
 local truck = {}
 local world = nil
 local wheels = {}
+local joystick = nil
 
 function love.load(args)
     success = love.window.setMode(window_width, window_height, {resizable=false})
@@ -23,11 +24,15 @@ function love.load(args)
         Waypoint.new(200, 150),
     }
 
-    truck = Truck.new(150, 150)
+    -- truck = Truck.new(150, 150)
 
     -- No gravity since we're using a "top down view"
     world = love.physics.newWorld( 0, 0, false )
-    table.insert(wheels, Wheel.new(world, 10, 10))
+    truck = Truck.new(world, 50, 50)
+    -- table.insert(wheels, Wheel.new(world, 10, 10))
+
+    local joysticks = love.joystick.getJoysticks()
+    joystick = joysticks[1] or nil
 end
 
 
@@ -37,23 +42,55 @@ function love.update(dt)
 
     iteration = iteration + 1
 
-    local turn_control = (iteration % 360) / 360 * 2 - 1
-    local drive_control = (iteration % 480) / 480 * 2 - 1
+    local turn_control = ((iteration % 3600) / 3600 ) 
+    local drive_control = (iteration % 480) / 480
 
-    wheels[1]:update_friction()
-    wheels[1]:update_drive(dt, 1)
-    --wheels[1]:update_turn(dt, turn_control)
-    world:update(dt)
+    if joystick then
+        local values = {
+            leftx = joystick:getGamepadAxis("leftx"),
+            lefty = joystick:getGamepadAxis("lefty"),
+            rightx = joystick:getGamepadAxis("rightx"),
+            righty = joystick:getGamepadAxis("righty"),
+            triggerleft = joystick:getGamepadAxis("triggerleft"),
+            triggerright = joystick:getGamepadAxis("triggerright")
+        }
+        turn_control = values.rightx
+        drive_control = -values.lefty
+        --for key,value in pairs(values) do print(key,value) end
+    end
+
+
+    --turn_control = 0
+    --drive_control = 0
+
+    for _, wheel in pairs(truck.wheels) do
+        wheel:update_friction()
+        wheel:update_drive(dt, drive_control)
+    end
+    --print("turn_control " .. turn_control)
+
+    truck:update(dt, turn_control)
+    --if turn_control <= 0.05 then
+    --    truck.wheels[1]:update_turn(dt, turn_control)
+    --else
+    --    truck.wheels[1]:update_turn(dt, 0)
+    --end
+    if true or love.keyboard.isDown('space') then
+        world:update(dt)
+    end
+
+
 end
 
 
 function love.draw()
 
     love.graphics.push()
-    love.graphics.scale(10, 10)   -- reduce everything by 50% in both X and Y coordinates
+    local scale = 1
+    love.graphics.scale(scale, scale)   -- reduce everything by 50% in both X and Y coordinates
 
     -- draw_waypoints()
-    draw_physics()
+    --draw_physics()
     truck:draw()
 
     love.graphics.pop()
