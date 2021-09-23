@@ -1,3 +1,4 @@
+local Common = require("Common")
 local Wheel = require("Wheel")
 
 -- Truck class
@@ -93,18 +94,22 @@ function Truck.new(world, x, y, angle_rad)
 end
 
 
-function Truck.update(self, dt, control_turn)
+function Truck.update_manual(self, dt, turn_control, brake_control, drive_control)
+    for _, wheel in pairs(self.wheels) do
+        wheel:update_friction(dt, brake_control)
+        wheel:update_drive(dt, drive_control)
+    end
+
     local joint_left = self.joints[self.FRONT_LEFT]
     local joint_right = self.joints[self.FRONT_RIGHT]
 
     joint_left:setMotorEnabled(true)
     joint_right:setMotorEnabled(true)
 
-
     joint_current_left = joint_left:getJointAngle()
     joint_current_right = joint_right:getJointAngle()
 
-    desired_angle = control_turn * self.front_angle_limit
+    desired_angle = turn_control * self.front_angle_limit
 
     angle_missing_left = desired_angle - joint_current_left
     angle_missing_right = desired_angle - joint_current_right
@@ -115,6 +120,96 @@ function Truck.update(self, dt, control_turn)
 
     joint_right:setMaxMotorTorque(1000)
     joint_left:setMaxMotorTorque(1000)
+end
+
+
+function Truck.ai_init(self, waypoints)
+    self.ai = {}
+    self.ai.waypoints = waypoints
+    self:ai_set_destination(1)
+end
+
+function Truck.ai_set_destination(self, index)
+    if index > #self.ai.waypoints then
+        -- We've reached the final waypoint, remove the destination. 
+        self.ai.current_destination = nil
+        return
+    end
+
+    self.ai.current_destination = {}
+    self.ai.current_destination.index = index
+    self.ai.current_destination.x = self.ai.waypoints[index].x
+    self.ai.current_destination.y = self.ai.waypoints[index].y
+end
+
+function Truck.ai_update(self, dt)
+    if not self.ai.current_destination then
+        turn_control = 0
+        brake_control = 0
+        drive_control = 0
+
+        self:update_manual(dt, turn_control, brake_control, drive_control)
+        return
+    end
+
+    local truck_x, truck_y = self.body:getPosition()
+    local to_target_x, to_target_y = Common.vector_sub(self.ai.current_destination.x, self.ai.current_destination.y, truck_x, truck_y)
+    local dist_to_target = Common.vector_length(to_target_x, to_target_y)
+
+    if dist_to_target < self.ai.waypoints[self.ai.current_destination.index].radius then
+        self:ai_set_destination(self.ai.current_destination.index + 1)
+
+        if not self.ai.current_destination then
+            turn_control = 0
+            brake_control = 0
+            drive_control = 0
+
+            self:update_manual(dt, turn_control, brake_control, drive_control)
+            return
+        end
+        to_target_x, to_target_y = Common.vector_sub(self.ai.current_destination.x, self.ai.current_destination.y, truck_x, truck_y)
+        dist_to_target = Common.vector_length(to_target_x, to_target_y)
+    end
+
+    local local_forward_x, local_forward_y = self.body:getWorldVector( 1, 0 )
+    local to_target_x_normalized, to_target_y_normalized = Common.vector_normalize(to_target_x, to_target_y)
+    local body_angle = self.body:getAngle()
+    local truck_angle = math.atan2(local_forward_y, local_forward_x)
+    local desired_angle = math.atan2(to_target_y, to_target_x)
+    local angle_diff = desired_angle - truck_angle
+
+    local angle = Common.clamp_between(angle_diff, -self.front_angle_limit, self.front_angle_limit) / self.front_angle_limit
+
+    drive_control = 1
+    brake_control = 0
+    turn_control = angle -- We've made this [-1..1]
+    self:update_manual(dt, turn_control, brake_control, drive_control)
+
+    -- for _, wheel in pairs(self.wheels) do
+    --     wheel:update_friction(dt, brake_control)
+    --     wheel:update_drive(dt, drive_control)
+    -- end
+
+    -- local joint_left = self.joints[self.FRONT_LEFT]
+    -- local joint_right = self.joints[self.FRONT_RIGHT]
+
+    -- joint_left:setMotorEnabled(true)
+    -- joint_right:setMotorEnabled(true)
+
+    -- joint_current_left = joint_left:getJointAngle()
+    -- joint_current_right = joint_right:getJointAngle()
+
+    -- desired_angle = turn_control * self.front_angle_limit
+
+    -- angle_missing_left = desired_angle - joint_current_left
+    -- angle_missing_right = desired_angle - joint_current_right
+
+
+    -- joint_left:setMotorSpeed(angle_missing_left / dt)
+    -- joint_right:setMotorSpeed(angle_missing_right / dt)
+
+    -- joint_right:setMaxMotorTorque(1000)
+    -- joint_left:setMaxMotorTorque(1000)
 end
 
 
@@ -129,7 +224,6 @@ function Truck.draw(self)
     self.wheels[self.FRONT_RIGHT]:draw()
     self.wheels[self.REAR_LEFT]:draw()
     self.wheels[self.REAR_RIGHT]:draw()
-
 end
 
 

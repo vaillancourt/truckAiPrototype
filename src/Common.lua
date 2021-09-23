@@ -22,6 +22,10 @@ function Common.vector_normalize(x, y)
     return x / length, y / length, length
 end
 
+function Common.vector_sub(x1, y1, x2, y2)
+    return x1 - x2, y1 - y2
+end
+
 function Common.vector_print(x, y, name)
     if name then
         print(name .. " (" .. x .. ", " .. y .. ")")
@@ -41,6 +45,13 @@ function Common.equivalent(v1, v2, epsilon)
     end
     -- if v1 == v2 then 
     return true
+end
+
+function Common.clamp_between(value, min, max)
+    if value < min then return min end
+    if value > max then return max end
+
+    return value
 end
 
 function Common.zero_near_zero(value, epsilon)
