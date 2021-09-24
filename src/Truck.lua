@@ -31,6 +31,7 @@ local Truck = {
     joints = {},
 
     front_angle_limit = 25 / 360 * 2 * math.pi
+
     }
 Truck.__index = Truck
 
@@ -185,31 +186,12 @@ function Truck.ai_update(self, dt)
     turn_control = angle -- We've made this [-1..1]
     self:update_manual(dt, turn_control, brake_control, drive_control)
 
-    -- for _, wheel in pairs(self.wheels) do
-    --     wheel:update_friction(dt, brake_control)
-    --     wheel:update_drive(dt, drive_control)
-    -- end
+    self.ai_debug = {}
+    self.ai_debug.position = { truck_x, truck_y }
+    self.ai_debug.destination = { self.ai.current_destination.x, self.ai.current_destination.y }
+    self.ai_debug.local_forward = { local_forward_x, local_forward_y }
+    self.ai_debug.local_to_target = { to_target_x_normalized, to_target_y_normalized }
 
-    -- local joint_left = self.joints[self.FRONT_LEFT]
-    -- local joint_right = self.joints[self.FRONT_RIGHT]
-
-    -- joint_left:setMotorEnabled(true)
-    -- joint_right:setMotorEnabled(true)
-
-    -- joint_current_left = joint_left:getJointAngle()
-    -- joint_current_right = joint_right:getJointAngle()
-
-    -- desired_angle = turn_control * self.front_angle_limit
-
-    -- angle_missing_left = desired_angle - joint_current_left
-    -- angle_missing_right = desired_angle - joint_current_right
-
-
-    -- joint_left:setMotorSpeed(angle_missing_left / dt)
-    -- joint_right:setMotorSpeed(angle_missing_right / dt)
-
-    -- joint_right:setMaxMotorTorque(1000)
-    -- joint_left:setMaxMotorTorque(1000)
 end
 
 
@@ -224,6 +206,30 @@ function Truck.draw(self)
     self.wheels[self.FRONT_RIGHT]:draw()
     self.wheels[self.REAR_LEFT]:draw()
     self.wheels[self.REAR_RIGHT]:draw()
+
+    function x(t) return t[1], t[2] end
+
+    if self.ai_debug then
+        local heading_vec_colour = {0, 0, 1, 1}
+        local dest_vec_colour = {1, 0, 1, 1}
+        local scale_forward = 10
+        local scale_to_target = scale_forward
+
+        local x1, y1 = x(self.ai_debug.position)
+        local x2, y2 = x(self.ai_debug.local_forward)
+        x2 =  x1 + x2 * scale_forward
+        y2 =  y1 + y2 * scale_forward
+        love.graphics.setColor(heading_vec_colour)
+        love.graphics.line(x1, y1, x2, y2)
+
+        x2, y2 = x(self.ai_debug.local_to_target)
+        x2 = x1 + x2 * scale_to_target
+        y2 = y1 + y2 * scale_to_target
+        love.graphics.setColor(dest_vec_colour)
+        love.graphics.line(x1, y1, x2, y2)
+
+        self.ai_debug = nil
+    end
 end
 
 

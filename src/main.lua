@@ -16,8 +16,8 @@ local joystick = nil
 local use_ai = true
 local simulation_started = false
 local gfx_scale = 3
-local time_scale = 4
-local FRAME_TIME = 1/480
+local time_scale = 1
+local FRAME_TIME = 1/60
 
 function love.load(args)
     success = love.window.setMode(window_width, window_height, {resizable=false})
