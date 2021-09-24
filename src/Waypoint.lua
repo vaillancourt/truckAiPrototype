@@ -1,3 +1,6 @@
+Common = require("Common")
+Constants = require("Constants")
+
 -- Waypoint class
 local Waypoint = {
     x = 50,
@@ -22,11 +25,11 @@ function Waypoint.draw(self)
     love.graphics.circle("fill", self.x, self.y, self.radius)
 
     local r = self.radius
-    love.graphics.setColor(0, 0, 0, 1)
-    love.graphics.print(self.index, self.x-0.5, self.y-0.5, 0, 0.5 )
+    love.graphics.setColor(Constants.colours.text_background)
+    love.graphics.print(self.index, Common.round(self.x - 0.5), Common.round(self.y - 0.5), 0, 0.5 )
 
-    love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.print(self.index, self.x, self.y, 0, 0.5 )
+    love.graphics.setColor(Constants.colours.text_foreground)
+    love.graphics.print(self.index, Common.round(self.x), Common.round(self.y), 0, 0.5 )
 
 end
 

@@ -150,6 +150,7 @@ function Truck.ai_update(self, dt)
         drive_control = 0
 
         self:update_manual(dt, turn_control, brake_control, drive_control)
+        self.ai_debug = nil
         return
     end
 
@@ -166,6 +167,7 @@ function Truck.ai_update(self, dt)
             drive_control = 0
 
             self:update_manual(dt, turn_control, brake_control, drive_control)
+            self.ai_debug = nil
             return
         end
         to_target_x, to_target_y = Common.vector_sub(self.ai.current_destination.x, self.ai.current_destination.y, truck_x, truck_y)
@@ -191,6 +193,10 @@ function Truck.ai_update(self, dt)
     self.ai_debug.destination = { self.ai.current_destination.x, self.ai.current_destination.y }
     self.ai_debug.local_forward = { local_forward_x, local_forward_y }
     self.ai_debug.local_to_target = { to_target_x_normalized, to_target_y_normalized }
+    do 
+        x, y = self.body:getLinearVelocity( )
+        self.ai_debug.speed = Common.vector_length(x, y)
+    end
 
 end
 
@@ -210,8 +216,6 @@ function Truck.draw(self)
     function x(t) return t[1], t[2] end
 
     if self.ai_debug then
-        local heading_vec_colour = {0, 0, 1, 1}
-        local dest_vec_colour = {1, 0, 1, 1}
         local scale_forward = 10
         local scale_to_target = scale_forward
 
@@ -219,16 +223,43 @@ function Truck.draw(self)
         local x2, y2 = x(self.ai_debug.local_forward)
         x2 =  x1 + x2 * scale_forward
         y2 =  y1 + y2 * scale_forward
-        love.graphics.setColor(heading_vec_colour)
+        love.graphics.setColor(Constants.colours.heading_vec)
         love.graphics.line(x1, y1, x2, y2)
 
         x2, y2 = x(self.ai_debug.local_to_target)
         x2 = x1 + x2 * scale_to_target
         y2 = y1 + y2 * scale_to_target
-        love.graphics.setColor(dest_vec_colour)
+        love.graphics.setColor(Constants.colours.destination_vec)
         love.graphics.line(x1, y1, x2, y2)
+    end
+end
 
-        self.ai_debug = nil
+
+function Truck.draw_text(self, gfx_scale)
+    if self.ai_debug then
+        if not self.font then
+            self.font = love.graphics.newFont(24, "mono")
+        end
+
+        local old_font = love.graphics.getFont()
+        love.graphics.setFont(self.font)
+
+        function x(t) return t[1], t[2] end
+
+        local x1, y1 = x(self.ai_debug.position)
+        local x, y = Common.round(x1 * gfx_scale), Common.round(y1 * gfx_scale)
+        local bg_off = 2 -- background offset
+        local sc = 1
+
+        local text = string.format("%.1f", Common.mps_to_kmh(self.ai_debug.speed))
+
+        love.graphics.setColor(Constants.colours.text_background)
+        love.graphics.print(text, x - bg_off, y - bg_off)
+
+        love.graphics.setColor(Constants.colours.text_foreground)
+        love.graphics.print(text, x, y)
+
+        love.graphics.setFont(old_font)
     end
 end
 

@@ -97,7 +97,7 @@ function Wheel.update_friction(self, dt, brake_control)
         local forward_dir_x, forward_dir_y, speed = Common.vector_normalize(self:get_forward_velocity())
         if not Common.equivalent(speed, 0) then
             --Common.vector_print(forward_dir_x, forward_dir_y, "forward_dir")
-            local drag_force_magnitude = -8.0 * speed * self.body:getMass()
+            local drag_force_magnitude = -0.9 * speed * self.body:getMass()
             drag_force_magnitude = drag_force_magnitude - (speed / self.max_forward_speed) * (brake_control * self.max_brake_force)
             --if self.debug then
             --    print("speed " .. direction * speed .. " speed|kmh " .. direction * Common.mps_to_kmh(speed))
@@ -122,7 +122,7 @@ function Wheel.update_drive(self, dt, control)
     local local_forward_x, local_forward_y = self.body:getWorldVector( 1, 0 )
     local forward_vel_x, forward_vel_y, direction = self:get_forward_velocity()
     local current_speed = direction * Common.vector_length(forward_vel_x, forward_vel_y)
-    local max_f = 200 * control
+    local max_f = 2 * control
 
     -- if self.debug then
     --     print("desired_speed " .. desired_speed .. " current_speed " .. current_speed)

@@ -60,18 +60,32 @@ end
 
 local iteration = 0
 local time_acc = 0
+local frame_phy_count = 0
+local frame_gfx_count = 0
+local debug_time_accumulaltor = 0
 
 function love.update(dt)
 
     time_acc = time_acc + dt * time_scale
+    debug_time_accumulaltor = debug_time_accumulaltor + dt
 
     while time_acc >= FRAME_TIME do
+        if love.keyboard.isDown('space') then
+            simulation_started = true
+        end
 
-        -- First, we smurf the time
-        time_acc = time_acc - FRAME_TIME
-        dt = FRAME_TIME
+        if simulation_started then
+            frame_phy_count = frame_phy_count + 1
+            time_acc = time_acc - FRAME_TIME
+            dt = FRAME_TIME
 
-        --print()
+            if time_acc >= FRAME_TIME then
+                print("----")
+            end
+        else
+            time_acc = time_acc - FRAME_TIME
+            dt = FRAME_TIME            
+        end
 
         iteration = iteration + 1
 
@@ -99,22 +113,26 @@ function love.update(dt)
             if use_ai then
                 truck:ai_update(dt)
             else
-                --turn_control = 0
-                --drive_control = 0
-
                 truck:update_manual(dt, turn_control, brake_control, drive_control)
             end
 
             world:update(dt)
         end
-        if love.keyboard.isDown('space') then
-            simulation_started = true
-        end
+
     end
+
+    if debug_time_accumulaltor >= 1 then
+        debug_time_accumulaltor = debug_time_accumulaltor - 1
+        print("Phy: " .. frame_phy_count .. "Hz " .. "Gfx: " .. frame_gfx_count .. "Hz ")
+        frame_phy_count = 0
+        frame_gfx_count = 0
+    end
+
 end
 
 
 function love.draw()
+    frame_gfx_count = frame_gfx_count + 1
 
     if not simulation_started then
         love.graphics.setColor(1, 1, 1, 1)
@@ -130,6 +148,8 @@ function love.draw()
     truck:draw()
 
     love.graphics.pop()
+
+    truck:draw_text(gfx_scale)
 end
 
 function draw_waypoints()

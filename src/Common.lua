@@ -62,6 +62,16 @@ function Common.zero_near_zero(value, epsilon)
     return value
 end
 
+function Common.sign(v)
+    -- http://lua-users.org/wiki/SimpleRound
+    return (v >= 0 and 1) or -1
+end
+function Common.round(v, bracket)
+    -- http://lua-users.org/wiki/SimpleRound
+    bracket = bracket or 1
+    return math.floor(v/bracket + Common.sign(v) * 0.5) * bracket
+end
+
 function Common.kmh_to_mps(kmh)
     return kmh * 1000 / 3600
 end
