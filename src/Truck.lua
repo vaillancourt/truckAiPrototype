@@ -1,5 +1,6 @@
 local Common = require("Common")
 local Wheel = require("Wheel")
+local TruckAi = require("TruckAi")
 
 -- Truck class
 local Truck = {
@@ -125,9 +126,10 @@ end
 
 
 function Truck.ai_init(self, waypoints)
-    self.ai = {}
-    self.ai.waypoints = waypoints
-    self:ai_set_destination(1)
+    TruckAi:init(self, waypoints)
+    -- self.truck_ai = 
+    -- self.ai.waypoints = waypoints
+    -- self:ai_set_destination(1)
 end
 
 function Truck.ai_set_destination(self, index)
@@ -144,59 +146,62 @@ function Truck.ai_set_destination(self, index)
 end
 
 function Truck.ai_update(self, dt)
-    if not self.ai.current_destination then
-        turn_control = 0
-        brake_control = 0
-        drive_control = 0
+    print()
+    print("Truck.ai_update")
+    TruckAi:update(self, dt)
+    -- if not self.ai.current_destination then
+    --     turn_control = 0
+    --     brake_control = 0
+    --     drive_control = 0
 
-        self:update_manual(dt, turn_control, brake_control, drive_control)
-        self.ai_debug = nil
-        return
-    end
+    --     self:update_manual(dt, turn_control, brake_control, drive_control)
+    --     self.ai_debug = nil
+    --     return
+    -- end
 
-    local truck_x, truck_y = self.body:getPosition()
-    local to_target_x, to_target_y = Common.vector_sub(self.ai.current_destination.x, self.ai.current_destination.y, truck_x, truck_y)
-    local dist_to_target = Common.vector_length(to_target_x, to_target_y)
+    -- local truck_x, truck_y = self.body:getPosition()
+    -- local to_target_x, to_target_y = Common.vector_sub(self.ai.current_destination.x, self.ai.current_destination.y, truck_x, truck_y)
+    -- local dist_to_target = Common.vector_length(to_target_x, to_target_y)
 
-    if dist_to_target < self.ai.waypoints[self.ai.current_destination.index].radius then
-        self:ai_set_destination(self.ai.current_destination.index + 1)
+    -- if dist_to_target < self.ai.waypoints[self.ai.current_destination.index].radius then
+    --     self:ai_set_destination(self.ai.current_destination.index + 1)
 
-        if not self.ai.current_destination then
-            turn_control = 0
-            brake_control = 0
-            drive_control = 0
+    --     if not self.ai.current_destination then
+    --         turn_control = 0
+    --         brake_control = 0
+    --         drive_control = 0
 
-            self:update_manual(dt, turn_control, brake_control, drive_control)
-            self.ai_debug = nil
-            return
-        end
-        to_target_x, to_target_y = Common.vector_sub(self.ai.current_destination.x, self.ai.current_destination.y, truck_x, truck_y)
-        dist_to_target = Common.vector_length(to_target_x, to_target_y)
-    end
+    --         self:update_manual(dt, turn_control, brake_control, drive_control)
+    --         self.ai_debug = nil
+    --         return
+    --     end
+    --     to_target_x, to_target_y = Common.vector_sub(self.ai.current_destination.x, self.ai.current_destination.y, truck_x, truck_y)
+    --     dist_to_target = Common.vector_length(to_target_x, to_target_y)
+    -- end
 
-    local local_forward_x, local_forward_y = self.body:getWorldVector( 1, 0 )
-    local to_target_x_normalized, to_target_y_normalized = Common.vector_normalize(to_target_x, to_target_y)
-    local body_angle = self.body:getAngle()
-    local truck_angle = math.atan2(local_forward_y, local_forward_x)
-    local desired_angle = math.atan2(to_target_y, to_target_x)
-    local angle_diff = desired_angle - truck_angle
+    -- local local_forward_x, local_forward_y = self.body:getWorldVector( 1, 0 )
+    -- local to_target_x_normalized, to_target_y_normalized = Common.vector_normalize(to_target_x, to_target_y)
+    -- local body_angle = self.body:getAngle()
+    -- local truck_angle = math.atan2(local_forward_y, local_forward_x)
+    -- local desired_angle = math.atan2(to_target_y, to_target_x)
+    -- local angle_diff = desired_angle - truck_angle
 
-    local angle = Common.clamp_between(angle_diff, -self.front_angle_limit, self.front_angle_limit) / self.front_angle_limit
+    -- local angle = Common.clamp_between(angle_diff, -self.front_angle_limit, self.front_angle_limit) / self.front_angle_limit
 
-    drive_control = 1
-    brake_control = 0
-    turn_control = angle -- We've made this [-1..1]
-    self:update_manual(dt, turn_control, brake_control, drive_control)
+    -- drive_control = 1
+    -- brake_control = 0
+    -- turn_control = angle -- We've made this [-1..1]
+    -- self:update_manual(dt, turn_control, brake_control, drive_control)
 
-    self.ai_debug = {}
-    self.ai_debug.position = { truck_x, truck_y }
-    self.ai_debug.destination = { self.ai.current_destination.x, self.ai.current_destination.y }
-    self.ai_debug.local_forward = { local_forward_x, local_forward_y }
-    self.ai_debug.local_to_target = { to_target_x_normalized, to_target_y_normalized }
-    do 
-        x, y = self.body:getLinearVelocity( )
-        self.ai_debug.speed = Common.vector_length(x, y)
-    end
+    -- self.ai_debug = {}
+    -- self.ai_debug.position = { truck_x, truck_y }
+    -- self.ai_debug.destination = { self.ai.current_destination.x, self.ai.current_destination.y }
+    -- self.ai_debug.local_forward = { local_forward_x, local_forward_y }
+    -- self.ai_debug.local_to_target = { to_target_x_normalized, to_target_y_normalized }
+    -- do 
+    --     x, y = self.body:getLinearVelocity( )
+    --     self.ai_debug.speed = Common.vector_length(x, y)
+    -- end
 
 end
 

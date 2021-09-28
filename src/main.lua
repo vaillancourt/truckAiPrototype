@@ -16,7 +16,7 @@ local joystick = nil
 local use_ai = true
 local simulation_started = false
 local gfx_scale = 3
-local time_scale = 1
+local time_scale = 4
 local FRAME_TIME = 1/60
 
 function love.load(args)
@@ -26,18 +26,19 @@ function love.load(args)
     {
        Waypoint.new(92, 40),
        Waypoint.new(31, 66),
-       Waypoint.new(42, 187),
-       Waypoint.new(74, 233),
-       Waypoint.new(180, 239),
-       Waypoint.new(103, 199),
-       Waypoint.new(172, 138),
-       Waypoint.new(219, 29),
-       Waypoint.new(228, 218),
-       Waypoint.new(214, 80),
-       Waypoint.new(111, 53),
-       Waypoint.new(88, 184),
-       Waypoint.new(39, 224),
-       Waypoint.new(37, 13),
+       Waypoint.new(92, 66),
+       -- Waypoint.new(42, 187),
+       -- Waypoint.new(74, 233),
+       -- Waypoint.new(180, 239),
+       -- Waypoint.new(103, 199),
+       -- Waypoint.new(172, 138),
+       -- Waypoint.new(219, 29),
+       -- Waypoint.new(228, 218),
+       -- Waypoint.new(214, 80),
+       -- Waypoint.new(111, 53),
+       -- Waypoint.new(88, 184),
+       -- Waypoint.new(39, 224),
+       -- Waypoint.new(37, 13),
     }
 
     for k, v in ipairs(waypoints) do
@@ -78,10 +79,6 @@ function love.update(dt)
             frame_phy_count = frame_phy_count + 1
             time_acc = time_acc - FRAME_TIME
             dt = FRAME_TIME
-
-            if time_acc >= FRAME_TIME then
-                print("----")
-            end
         else
             time_acc = time_acc - FRAME_TIME
             dt = FRAME_TIME            
