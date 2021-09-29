@@ -5,6 +5,16 @@ function Common.world_to_gfx(world_coord)
     return world_coord
 end
 
+
+function Common.v_to_t(x, y)
+  return { x, y }
+end
+
+function Common.t_to_v(t)
+  return t[1], t[2]
+end
+
+
 function Common.dot_product(x1, y1, x2, y2)
     return (x1 * x2) + (y1 * y2)
 end

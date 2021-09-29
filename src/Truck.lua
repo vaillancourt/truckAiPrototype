@@ -31,12 +31,17 @@ local Truck = {
     wheels = {},
     joints = {},
 
-    front_angle_limit = 32.6 / 360 * 2 * math.pi, -- This gives a turning radius of 9.1m
-
+    -- How much can the wheels turn, on either side (i.e. [-front_angle_limit, front_angle_limit])
+    -- 32.6 gives a turning radius of 9.1m
+    front_angle_limit = Common.d2r(32.6), 
     robo_config = {
         max_accel_forward_full = Common.g_to_mss(0.25),
         max_accel_forward_empty = Common.g_to_mss(0.5),
         max_accel_reverse = Common.g_to_mss(0.15),
+    },
+    last_frame = {
+        control = { turn = 0, brake = 0, drive = 0 },
+        speed = 0,
     }
 
     }
@@ -103,6 +108,12 @@ end
 
 
 function Truck.update_manual(self, dt, turn_control, brake_control, drive_control)
+
+    self.last_frame.control = {
+        turn = turn_control, 
+        brake = brake_control, 
+        drive = drive_control }
+
     for _, wheel in pairs(self.wheels) do
         wheel:update_friction(dt, brake_control)
         wheel:update_drive(dt, drive_control)
