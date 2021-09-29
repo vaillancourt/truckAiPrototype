@@ -80,4 +80,12 @@ function Common.mps_to_kmh(mps)
     return mps * 3600 / 1000
 end
 
+function Common.d2r(degrees)
+    return degrees  / 360 * 2 * math.pi
+end
+
+function Common.g_to_mss(g)
+    return g * 9.8
+end
+
 return Common

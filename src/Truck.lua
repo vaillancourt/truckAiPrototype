@@ -31,7 +31,13 @@ local Truck = {
     wheels = {},
     joints = {},
 
-    front_angle_limit = 25 / 360 * 2 * math.pi
+    front_angle_limit = 32.6 / 360 * 2 * math.pi, -- This gives a turning radius of 9.1m
+
+    robo_config = {
+        max_accel_forward_full = Common.g_to_mss(0.25),
+        max_accel_forward_empty = Common.g_to_mss(0.5),
+        max_accel_reverse = Common.g_to_mss(0.15),
+    }
 
     }
 Truck.__index = Truck
@@ -127,82 +133,14 @@ end
 
 function Truck.ai_init(self, waypoints)
     TruckAi:init(self, waypoints)
-    -- self.truck_ai = 
-    -- self.ai.waypoints = waypoints
-    -- self:ai_set_destination(1)
-end
-
-function Truck.ai_set_destination(self, index)
-    if index > #self.ai.waypoints then
-        -- We've reached the final waypoint, remove the destination. 
-        self.ai.current_destination = nil
-        return
-    end
-
-    self.ai.current_destination = {}
-    self.ai.current_destination.index = index
-    self.ai.current_destination.x = self.ai.waypoints[index].x
-    self.ai.current_destination.y = self.ai.waypoints[index].y
 end
 
 function Truck.ai_update(self, dt)
     print()
     print("Truck.ai_update")
+    local truck_x, truck_y = self.body:getPosition()
+    self.ai_data.position = { truck_x, truck_y }
     TruckAi:update(self, dt)
-    -- if not self.ai.current_destination then
-    --     turn_control = 0
-    --     brake_control = 0
-    --     drive_control = 0
-
-    --     self:update_manual(dt, turn_control, brake_control, drive_control)
-    --     self.ai_debug = nil
-    --     return
-    -- end
-
-    -- local truck_x, truck_y = self.body:getPosition()
-    -- local to_target_x, to_target_y = Common.vector_sub(self.ai.current_destination.x, self.ai.current_destination.y, truck_x, truck_y)
-    -- local dist_to_target = Common.vector_length(to_target_x, to_target_y)
-
-    -- if dist_to_target < self.ai.waypoints[self.ai.current_destination.index].radius then
-    --     self:ai_set_destination(self.ai.current_destination.index + 1)
-
-    --     if not self.ai.current_destination then
-    --         turn_control = 0
-    --         brake_control = 0
-    --         drive_control = 0
-
-    --         self:update_manual(dt, turn_control, brake_control, drive_control)
-    --         self.ai_debug = nil
-    --         return
-    --     end
-    --     to_target_x, to_target_y = Common.vector_sub(self.ai.current_destination.x, self.ai.current_destination.y, truck_x, truck_y)
-    --     dist_to_target = Common.vector_length(to_target_x, to_target_y)
-    -- end
-
-    -- local local_forward_x, local_forward_y = self.body:getWorldVector( 1, 0 )
-    -- local to_target_x_normalized, to_target_y_normalized = Common.vector_normalize(to_target_x, to_target_y)
-    -- local body_angle = self.body:getAngle()
-    -- local truck_angle = math.atan2(local_forward_y, local_forward_x)
-    -- local desired_angle = math.atan2(to_target_y, to_target_x)
-    -- local angle_diff = desired_angle - truck_angle
-
-    -- local angle = Common.clamp_between(angle_diff, -self.front_angle_limit, self.front_angle_limit) / self.front_angle_limit
-
-    -- drive_control = 1
-    -- brake_control = 0
-    -- turn_control = angle -- We've made this [-1..1]
-    -- self:update_manual(dt, turn_control, brake_control, drive_control)
-
-    -- self.ai_debug = {}
-    -- self.ai_debug.position = { truck_x, truck_y }
-    -- self.ai_debug.destination = { self.ai.current_destination.x, self.ai.current_destination.y }
-    -- self.ai_debug.local_forward = { local_forward_x, local_forward_y }
-    -- self.ai_debug.local_to_target = { to_target_x_normalized, to_target_y_normalized }
-    -- do 
-    --     x, y = self.body:getLinearVelocity( )
-    --     self.ai_debug.speed = Common.vector_length(x, y)
-    -- end
-
 end
 
 
@@ -220,28 +158,32 @@ function Truck.draw(self)
 
     function x(t) return t[1], t[2] end
 
-    if self.ai_debug then
-        local scale_forward = 10
-        local scale_to_target = scale_forward
+    if self.ai_data then
+        -- local scale_forward = 10
+        -- local scale_to_target = scale_forward
 
-        local x1, y1 = x(self.ai_debug.position)
-        local x2, y2 = x(self.ai_debug.local_forward)
-        x2 =  x1 + x2 * scale_forward
-        y2 =  y1 + y2 * scale_forward
-        love.graphics.setColor(Constants.colours.heading_vec)
-        love.graphics.line(x1, y1, x2, y2)
+        -- local x1, y1 = x(self.ai_data.position)
+        -- local x2, y2 = x(self.ai_data.local_forward)
+        -- x2 =  x1 + x2 * scale_forward
+        -- y2 =  y1 + y2 * scale_forward
+        -- love.graphics.setColor(Constants.colours.heading_vec)
+        -- love.graphics.line(x1, y1, x2, y2)
 
-        x2, y2 = x(self.ai_debug.local_to_target)
-        x2 = x1 + x2 * scale_to_target
-        y2 = y1 + y2 * scale_to_target
-        love.graphics.setColor(Constants.colours.destination_vec)
-        love.graphics.line(x1, y1, x2, y2)
+        -- x2, y2 = x(self.ai_data.local_to_target)
+        -- x2 = x1 + x2 * scale_to_target
+        -- y2 = y1 + y2 * scale_to_target
+        -- love.graphics.setColor(Constants.colours.destination_vec)
+        -- love.graphics.line(x1, y1, x2, y2)
+    end
+
+    if self.ai_data.draw_function then 
+        self.ai_data.draw_function(self)
     end
 end
 
 
 function Truck.draw_text(self, gfx_scale)
-    if self.ai_debug then
+    if self.ai_data then
         if not self.font then
             self.font = love.graphics.newFont(24, "mono")
         end
@@ -249,20 +191,24 @@ function Truck.draw_text(self, gfx_scale)
         local old_font = love.graphics.getFont()
         love.graphics.setFont(self.font)
 
-        function x(t) return t[1], t[2] end
+        -- function x(t) return t[1], t[2] end
 
-        local x1, y1 = x(self.ai_debug.position)
-        local x, y = Common.round(x1 * gfx_scale), Common.round(y1 * gfx_scale)
-        local bg_off = 2 -- background offset
-        local sc = 1
+        -- local x1, y1 = x(self.ai_data.position)
+        -- local x, y = Common.round(x1 * gfx_scale), Common.round(y1 * gfx_scale)
+        -- local bg_off = 2 -- background offset
+        -- local sc = 1
 
-        local text = string.format("%.1f", Common.mps_to_kmh(self.ai_debug.speed))
+        -- local text = string.format("%.1f", Common.mps_to_kmh(self.ai_data.speed))
 
-        love.graphics.setColor(Constants.colours.text_background)
-        love.graphics.print(text, x - bg_off, y - bg_off)
+        -- love.graphics.setColor(Constants.colours.text_background)
+        -- love.graphics.print(text, x - bg_off, y - bg_off)
 
-        love.graphics.setColor(Constants.colours.text_foreground)
-        love.graphics.print(text, x, y)
+        -- love.graphics.setColor(Constants.colours.text_foreground)
+        -- love.graphics.print(text, x, y)
+
+        if self.ai_data.draw_text_function then 
+            self.ai_data.draw_text_function(self, gfx_scale)
+        end
 
         love.graphics.setFont(old_font)
     end
