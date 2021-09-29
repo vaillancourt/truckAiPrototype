@@ -2,6 +2,14 @@ local BehaviourTree = require("behaviourtree/lib/behaviour_tree")
 local inspect = require("inspect")
 TruckAi = {}
 
+local v_to_t = function(x, y)
+  return { x, y }
+end
+
+local t_to_v = function(t)
+  return t[1], t[2]
+end
+
 -- https://github.com/tanema/behaviourtree.lua
 local task_find_destination = BehaviourTree.Task:new({
     name = "task_find_destination",
@@ -31,14 +39,13 @@ local task_reach_destination = BehaviourTree.Task:new({
     run = function(task, obj)
 
         local ai = obj.ai_data
-        local truck_x, truck_y = obj.body:getPosition()
+        local truck_x, truck_y = t_to_v(ai.position)
         local to_target_x, to_target_y = Common.vector_sub(ai.current_destination.x, ai.current_destination.y, truck_x, truck_y)
         local dist_to_target = Common.vector_length(to_target_x, to_target_y)
 
         if dist_to_target < ai.waypoints[ai.current_destination.index].radius then
-              print("task_reach_destination success")
-              task:success()
-              return
+            task:success()
+            return
         end
 
         local local_forward_x, local_forward_y = obj.body:getWorldVector( 1, 0 )
@@ -48,20 +55,17 @@ local task_reach_destination = BehaviourTree.Task:new({
         local desired_angle = math.atan2(to_target_y, to_target_x)
         local angle_diff = desired_angle - truck_angle
 
-        local angle = Common.clamp_between(angle_diff, -obj.front_angle_limit, obj.front_angle_limit) / obj.front_angle_limit
+        local angle_ratio = Common.clamp_between(angle_diff, -obj.front_angle_limit, obj.front_angle_limit) / obj.front_angle_limit
 
-        drive_control = 1
-        brake_control = 0
-        turn_control = angle -- We've made this [-1..1]
+
+        local drive_control = 1
+        local brake_control = 0
+        local turn_control = angle_ratio -- We've made this [-1..1]
         obj:update_manual(obj.ai_data.dt, turn_control, brake_control, drive_control)
 
         obj.ai_data.destination = { ai.current_destination.x, ai.current_destination.y }
         obj.ai_data.local_forward = { local_forward_x, local_forward_y }
         obj.ai_data.local_to_target = { to_target_x_normalized, to_target_y_normalized }
-        do 
-            x, y = obj.body:getLinearVelocity( )
-            obj.ai_data.speed = Common.vector_length(x, y)
-        end
 
         task:running()
     end
@@ -130,9 +134,7 @@ local truck_turn_left = BehaviourTree:new({
           end
 
           do
-            function x(t) return t[1], t[2] end
-
-            local x1, y1 = x(obj.ai_data.position)
+            local x1, y1 = t_to_v(obj.ai_data.position)
             local x, y = Common.round(x1 * gfx_scale), Common.round(y1 * gfx_scale)
             local bg_off = 2 -- background offset
             local sc = 1
@@ -180,7 +182,13 @@ end
 
 function TruckAi.update(self, truck, dt)
     truck.ai_data.dt = dt
+    local truck_x, truck_y = truck.body:getPosition()
+    truck.ai_data.position = { truck_x, truck_y }
     truck.ai_data.behaviour_tree:run(truck)
+    do 
+        x, y = truck.body:getLinearVelocity( )
+        truck.ai_data.speed = Common.vector_length(x, y)
+    end
 end
 
 

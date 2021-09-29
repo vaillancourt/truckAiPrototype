@@ -138,8 +138,6 @@ end
 function Truck.ai_update(self, dt)
     print()
     print("Truck.ai_update")
-    local truck_x, truck_y = self.body:getPosition()
-    self.ai_data.position = { truck_x, truck_y }
     TruckAi:update(self, dt)
 end
 
