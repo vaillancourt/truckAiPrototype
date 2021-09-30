@@ -102,4 +102,42 @@ function Common.mss_to_g(mss)
     return mss / 9.8
 end
 
+function Common.clean_angle_minus_pi_to_pi(angle_minus_pi_to_pi)
+    while angle_minus_pi_to_pi > math.pi do
+        angle_minus_pi_to_pi = angle_minus_pi_to_pi - 2 * math.pi
+    end
+
+    while angle_minus_pi_to_pi <= -math.pi do
+        angle_minus_pi_to_pi = angle_minus_pi_to_pi + 2 * math.pi
+    end
+
+    return angle_minus_pi_to_pi
+end
+
+function Common.over_2pi(angle_minus_pi_to_pi)
+    angle_minus_pi_to_pi = Common.clean_angle_minus_pi_to_pi(angle_minus_pi_to_pi)
+
+    if angle_minus_pi_to_pi >= 0 and angle_minus_pi_to_pi <= math.pi then
+        return angle_minus_pi_to_pi
+    end
+
+    return 2 * math.pi + angle_minus_pi_to_pi
+end
+
+function Common.clean_angle_over_2pi(angle_over_2pi)
+    while angle_over_2pi >= 2 * math.pi do
+        angle_over_2pi = angle_over_2pi - 2 * math.pi
+    end
+    return angle_over_2pi
+end
+
+function Common.from_over_2pi_to_minus_pi_to_pi(angle_over_2pi)
+    angle_over_2pi = Common.clean_angle_over_2pi(angle_over_2pi)
+
+    if angle_over_2pi >= 0 and angle_over_2pi <= math.pi then
+        return angle_over_2pi
+    end
+    return -math.pi + (angle_over_2pi - math.pi)
+end
+
 return Common

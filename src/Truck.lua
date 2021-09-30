@@ -114,7 +114,7 @@ function Truck.update_manual(self, dt, turn_control, brake_control, drive_contro
         brake = brake_control, 
         drive = drive_control }
 
-    print("drive_control " .. drive_control)
+    --print("drive_control " .. drive_control)
 
     for _, wheel in pairs(self.wheels) do
         wheel:update_friction(dt, brake_control)
@@ -149,8 +149,8 @@ function Truck.ai_init(self, waypoints)
 end
 
 function Truck.ai_update(self, dt)
-    print()
-    print("Truck.ai_update")
+    -- print()
+    -- print("Truck.ai_update")
     TruckAi:update(self, dt)
 end
 

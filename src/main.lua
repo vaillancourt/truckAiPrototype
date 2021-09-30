@@ -15,7 +15,7 @@ local world = nil
 local joystick = nil
 local use_ai = true
 local simulation_started = false
-local gfx_scale = 3
+local gfx_scale = 6
 local time_scale = 4
 local FRAME_TIME = 1/60
 
@@ -25,24 +25,29 @@ function love.load(args)
     waypoints = 
     {
 
+       Waypoint.new(101, 68),
+       Waypoint.new(92, 69),
+       Waypoint.new(81, 79),
+       Waypoint.new(73, 79),
+       Waypoint.new(67, 80),
        -- Waypoint.new(60, 32),
        -- Waypoint.new(193, 205),
 
-       Waypoint.new(92, 40),
-       Waypoint.new(31, 66),
-       Waypoint.new(92, 66),
-       Waypoint.new(42, 187),
-       Waypoint.new(74, 233),
-       Waypoint.new(180, 239),
-       Waypoint.new(103, 199),
-       Waypoint.new(172, 138),
-       Waypoint.new(219, 29),
-       Waypoint.new(228, 218),
-       Waypoint.new(214, 80),
-       Waypoint.new(111, 53),
-       Waypoint.new(88, 184),
-       Waypoint.new(39, 224),
-       Waypoint.new(37, 13),
+       -- Waypoint.new(92, 40),
+       -- Waypoint.new(31, 66),
+       -- Waypoint.new(92, 66),
+       -- -- Waypoint.new(42, 187),
+       -- -- Waypoint.new(74, 233),
+       -- -- Waypoint.new(180, 239),
+       -- -- Waypoint.new(103, 199),
+       -- -- Waypoint.new(172, 138),
+       -- -- Waypoint.new(219, 29),
+       -- -- Waypoint.new(228, 218),
+       -- -- Waypoint.new(214, 80),
+       -- -- Waypoint.new(111, 53),
+       -- -- Waypoint.new(88, 184),
+       -- --Waypoint.new(39, 224),
+       -- Waypoint.new(37, 13),
     }
 
     for k, v in ipairs(waypoints) do
@@ -51,7 +56,7 @@ function love.load(args)
 
     -- No gravity since we're using a "top down view"
     world = love.physics.newWorld( 0, 0, false )
-    truck = Truck.new(world, 30, 30)
+    truck = Truck.new(world, 114, 68)
 
     local joysticks = love.joystick.getJoysticks()
     joystick = joysticks[1] or nil
@@ -124,7 +129,7 @@ function love.update(dt)
 
     if debug_time_accumulaltor >= 1 then
         debug_time_accumulaltor = debug_time_accumulaltor - 1
-        print("Phy: " .. frame_phy_count .. "Hz " .. "Gfx: " .. frame_gfx_count .. "Hz ")
+        -- print("Phy: " .. frame_phy_count .. "Hz " .. "Gfx: " .. frame_gfx_count .. "Hz ")
         frame_phy_count = 0
         frame_gfx_count = 0
     end

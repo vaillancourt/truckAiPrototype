@@ -28,8 +28,8 @@ local task_find_destination = BehaviourTree.Task:new({
 })
 
 
-local task_reach_destination = BehaviourTree.Task:new({
-    name = "task_reach_destination",
+local task_reach_destination_forward = BehaviourTree.Task:new({
+    name = "task_reach_destination_forward",
     run = function(task, obj)
 
         local ai = obj.ai_data
@@ -99,6 +99,87 @@ local task_reach_destination = BehaviourTree.Task:new({
 })
 
 
+local task_reach_destination_reverse = BehaviourTree.Task:new({
+    name = "task_reach_destination_reverse",
+    run = function(task, obj)
+
+        local ai = obj.ai_data
+
+        local truck_x, truck_y = Common.t_to_v(ai.position)
+        local to_target_x, to_target_y = Common.vector_sub(ai.current_destination.x, ai.current_destination.y, truck_x, truck_y)
+        local dist_to_target = Common.vector_length(to_target_x, to_target_y)
+
+        if dist_to_target < ai.waypoints[ai.current_destination.index].radius then
+            task:success()
+            return
+        end
+
+        -- Calculating the angle of the wheels
+        -- local local_forward_x, local_forward_y = obj.body:getWorldVector( 1, 0 )
+        local local_reverse_x, local_reverse_y = obj.body:getWorldVector( -1, 0 )
+        local to_target_x_normalized, to_target_y_normalized = Common.vector_normalize(to_target_x, to_target_y)
+        local body_angle = Common.over_2pi(obj.body:getAngle())
+        local truck_angle = Common.over_2pi(math.atan2(local_reverse_y, local_reverse_x))
+        local desired_angle = Common.over_2pi(math.atan2(to_target_y, to_target_x))
+        local angle_diff = Common.over_2pi(desired_angle - truck_angle)
+        local angle_diff_neg = Common.from_over_2pi_to_minus_pi_to_pi(angle_diff)
+        local angle_clamped = Common.clamp_between(angle_diff_neg, -obj.front_angle_limit, obj.front_angle_limit)
+        local angle_ratio = -angle_clamped / obj.front_angle_limit
+
+        local drive_control = -1
+        local brake_control = 0
+        -- print(
+        --     "body_angle " .. body_angle ..
+        --     " truck_angle " .. truck_angle ..
+        --     " desired_angle " .. desired_angle ..
+        --     " angle_diff " .. angle_diff ..
+        --     " angle_diff_neg " .. angle_diff_neg ..
+        --     " angle_clamped " .. angle_clamped ..
+        --     " angle_ratio " .. angle_ratio ..
+        --     "")
+
+        do
+            -- Calculating the drive_control
+
+            -- Limit the acceleration
+            --print("(obj.last_frame.control.drive or nil) " .. (obj.last_frame.control.drive or "nil"))
+            if -obj.robo_config.max_accel_reverse < ai.acceleration  then
+              drive_control = (obj.last_frame.control.drive or 0) - 0.01
+              print("accel " .. ai.acceleration .. " < " .. obj.robo_config.max_accel_reverse)
+            elseif ai.acceleration < -obj.robo_config.max_accel_reverse then
+              drive_control = (obj.last_frame.control.drive or 0) + 0.1
+              print("deaccel " .. ai.acceleration .. " > " .. obj.robo_config.max_accel_reverse)
+            end
+
+            -- https://www.physicsclassroom.com/class/1DKin/Lesson-6/Kinematic-Equations
+            -- vf^2 = vi^2 + 2*a*d
+            -- 2*a*d = vf^2 - vi^2
+            -- d = (vf^2 - vi^2) / (2 * a)
+
+            local vfSq = 0
+            local viSq = ai.speed * ai.speed
+            local a = -obj.robo_config.max_accel_forward_empty
+            local distance_to_stop_at_allowed_rate = vfSq - viSq / (2 * a)
+            print("dist_to_target " .. dist_to_target .. " distance_to_stop_at_allowed_rate " .. distance_to_stop_at_allowed_rate)
+            if dist_to_target < 2*distance_to_stop_at_allowed_rate then
+              drive_control = 0
+              brake_control = 0.75
+            end
+            drive_control = Common.clamp_between(drive_control, -1, 0)
+        end
+
+        local turn_control = angle_ratio -- We've made this [-1..1]
+        obj:update_manual(ai.dt, turn_control, brake_control, drive_control)
+
+        ai.destination = { ai.current_destination.x, ai.current_destination.y }
+        ai.local_forward = { local_forward_x, local_forward_y }
+        ai.local_to_target = { to_target_x_normalized, to_target_y_normalized }
+
+        task:running()
+    end
+})
+
+
 local task_idle = BehaviourTree.Task:new({
   name = "task_idle",
   run = function(task, obj)
@@ -113,7 +194,7 @@ local task_idle = BehaviourTree.Task:new({
 
 
 BehaviourTree.register('task_find_destination', task_find_destination)
-BehaviourTree.register('task_reach_destination', task_reach_destination)
+BehaviourTree.register('task_reach_destination_reverse', task_reach_destination_reverse)
 BehaviourTree.register('task_idle', task_idle)
 
 
@@ -128,7 +209,7 @@ local truck_tree = BehaviourTree:new({
           name = "movingSequence",
           nodes = { 
             'task_find_destination', 
-            'task_reach_destination' 
+            'task_reach_destination_reverse' 
           } 
         }) 
       }),
@@ -232,7 +313,7 @@ function TruckAi.update(self, truck, dt)
 
     local count = 0
     local sum = 0
-    print()
+    --print()
     for _, v in ipairs(truck.ai_data.previous_speeds) do
       count = count + 1
       --print(v)
