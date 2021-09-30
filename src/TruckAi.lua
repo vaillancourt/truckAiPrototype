@@ -53,8 +53,23 @@ local task_reach_destination = BehaviourTree.Task:new({
         local angle_clamped = Common.clamp_between(angle_diff, -obj.front_angle_limit, obj.front_angle_limit)
         local angle_ratio = angle_clamped / obj.front_angle_limit
 
+        local drive_control = 1
+        local brake_control = 0
+        
+
         do
             -- Calculating the drive_control
+
+            -- Limit the acceleration
+            --print("(obj.last_frame.control.drive or nil) " .. (obj.last_frame.control.drive or "nil"))
+            if ai.acceleration < obj.robo_config.max_accel_forward_empty then
+              drive_control = (obj.last_frame.control.drive or 0) + 0.01
+              print("accel " .. ai.acceleration .. " < " .. obj.robo_config.max_accel_forward_empty)
+            elseif ai.acceleration > obj.robo_config.max_accel_forward_empty then
+              drive_control = (obj.last_frame.control.drive or 0) - 0.1
+              print("deaccel " .. ai.acceleration .. " > " .. obj.robo_config.max_accel_forward_empty)
+            end
+
             -- https://www.physicsclassroom.com/class/1DKin/Lesson-6/Kinematic-Equations
             -- vf^2 = vi^2 + 2*a*d
             -- 2*a*d = vf^2 - vi^2
@@ -64,13 +79,14 @@ local task_reach_destination = BehaviourTree.Task:new({
             local viSq = ai.speed * ai.speed
             local a = -obj.robo_config.max_accel_forward_empty
             local distance_to_stop_at_allowed_rate = vfSq - viSq / (2 * a)
-            print("dist_to_target " .. dist_to_target .. " distance_to_stop_at_allowed_rate " .. distance_to_stop_at_allowed_rate)
-            if dist_to_target > distance_to_stop_at_allowed_rate then
+            --print("dist_to_target " .. dist_to_target .. " distance_to_stop_at_allowed_rate " .. distance_to_stop_at_allowed_rate)
+            if dist_to_target < 2*distance_to_stop_at_allowed_rate then
+              drive_control = 0
+              brake_control = 0.75
             end
+            drive_control = Common.clamp_between(drive_control, 0, 1)
         end
 
-        local drive_control = 1
-        local brake_control = 0
         local turn_control = angle_ratio -- We've made this [-1..1]
         obj:update_manual(ai.dt, turn_control, brake_control, drive_control)
 
@@ -191,6 +207,11 @@ function TruckAi.init(self, truck, waypoints)
         truck.ai_data.current_index = 0
         truck.ai_data.dt = 0
         truck.ai_data.speed = 0
+
+
+        truck.ai_data.previous_speeds = {0}
+        truck.ai_data.previous_speed_index = 1
+
         truck.ai_data.behaviour_tree = truck_tree
         --truck.ai_data.behaviour_tree = truck_turn_left
     end
@@ -198,21 +219,39 @@ end
 
 function TruckAi.update(self, truck, dt)
 
-    truck.last_frame.speed = truck.ai_data.speed
+    truck.ai_data.previous_speed_index = truck.ai_data.previous_speed_index + 1
+    if truck.ai_data.previous_speed_index == 6 then
+        truck.ai_data.previous_speed_index = 1
+    end
+
 
     truck.ai_data.dt = dt
     truck.ai_data.position = Common.v_to_t(truck.body:getPosition())
     local local_forward_x, local_forward_y, direction = Phyutil.get_forward_velocity(truck.body)
-    truck.ai_data.speed = direction * Common.vector_length(local_forward_x, local_forward_y)
+    truck.ai_data.previous_speeds[truck.ai_data.previous_speed_index] = direction * Common.vector_length(local_forward_x, local_forward_y)
+
+    local count = 0
+    local sum = 0
+    print()
+    for _, v in ipairs(truck.ai_data.previous_speeds) do
+      count = count + 1
+      --print(v)
+      sum = sum + v
+    end
+    truck.last_frame.speed = truck.ai_data.speed
+    truck.ai_data.speed = sum / count
+
+
+    --truck.ai_data.speed = direction * Common.vector_length(local_forward_x, local_forward_y)
     truck.ai_data.acceleration = (truck.ai_data.speed - truck.last_frame.speed) / dt
     truck.ai_data.forward_vel = {
         x = forward_vel_x, 
         y = forward_vel_y }
     truck.ai_data.direction = direction
 
-    print("acceleration " .. truck.ai_data.acceleration  
-        .. " speed " .. truck.ai_data.speed
-        )
+    -- print("acceleration " .. truck.ai_data.acceleration  
+    --     .. " speed " .. truck.ai_data.speed
+    --     )
 
     truck.ai_data.behaviour_tree:run(truck)
 end

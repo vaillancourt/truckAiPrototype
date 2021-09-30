@@ -106,6 +106,9 @@ function Wheel.update_drive(self, dt, control)
     local max_f = self.max_drive_force * control
 
     if desired_speed > 0 and desired_speed > current_speed then
+        if control > 0 then
+            max_f = max_f * (desired_speed - current_speed) / self.max_forward_speed
+        end
         self.body:applyForce( local_forward_x * max_f, local_forward_y * max_f)
     elseif desired_speed < 0 and desired_speed < current_speed then
         self.body:applyForce( local_forward_x * max_f, local_forward_y * max_f)

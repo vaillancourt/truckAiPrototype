@@ -24,21 +24,25 @@ function love.load(args)
 
     waypoints = 
     {
+
+       -- Waypoint.new(60, 32),
+       -- Waypoint.new(193, 205),
+
        Waypoint.new(92, 40),
        Waypoint.new(31, 66),
        Waypoint.new(92, 66),
-       -- Waypoint.new(42, 187),
-       -- Waypoint.new(74, 233),
-       -- Waypoint.new(180, 239),
-       -- Waypoint.new(103, 199),
-       -- Waypoint.new(172, 138),
-       -- Waypoint.new(219, 29),
-       -- Waypoint.new(228, 218),
-       -- Waypoint.new(214, 80),
-       -- Waypoint.new(111, 53),
-       -- Waypoint.new(88, 184),
-       -- Waypoint.new(39, 224),
-       -- Waypoint.new(37, 13),
+       Waypoint.new(42, 187),
+       Waypoint.new(74, 233),
+       Waypoint.new(180, 239),
+       Waypoint.new(103, 199),
+       Waypoint.new(172, 138),
+       Waypoint.new(219, 29),
+       Waypoint.new(228, 218),
+       Waypoint.new(214, 80),
+       Waypoint.new(111, 53),
+       Waypoint.new(88, 184),
+       Waypoint.new(39, 224),
+       Waypoint.new(37, 13),
     }
 
     for k, v in ipairs(waypoints) do

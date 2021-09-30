@@ -114,6 +114,8 @@ function Truck.update_manual(self, dt, turn_control, brake_control, drive_contro
         brake = brake_control, 
         drive = drive_control }
 
+    print("drive_control " .. drive_control)
+
     for _, wheel in pairs(self.wheels) do
         wheel:update_friction(dt, brake_control)
         wheel:update_drive(dt, drive_control)
@@ -192,7 +194,7 @@ end
 
 
 function Truck.draw_text(self, gfx_scale)
-    if self.ai_data then
+    if self.ai_data and self.ai_data.position then
         if not self.font then
             self.font = love.graphics.newFont(24, "mono")
         end
@@ -200,20 +202,20 @@ function Truck.draw_text(self, gfx_scale)
         local old_font = love.graphics.getFont()
         love.graphics.setFont(self.font)
 
-        -- function x(t) return t[1], t[2] end
+        local x1, y1 = Common.t_to_v(self.ai_data.position)
+        local x, y = Common.round(x1 * gfx_scale), Common.round(y1 * gfx_scale)
+        local bg_off = 2 -- background offset
+        local sc = 1
 
-        -- local x1, y1 = x(self.ai_data.position)
-        -- local x, y = Common.round(x1 * gfx_scale), Common.round(y1 * gfx_scale)
-        -- local bg_off = 2 -- background offset
-        -- local sc = 1
+        local spd = Common.mps_to_kmh(self.ai_data.speed)
+        local acc = Common.mss_to_g(self.ai_data.acceleration)
+        local text = string.format("spd %.1f\nacc %.2f", spd, acc)
 
-        -- local text = string.format("%.1f", Common.mps_to_kmh(self.ai_data.speed))
+        love.graphics.setColor(Constants.colours.text_background)
+        love.graphics.print(text, x - bg_off, y - bg_off)
 
-        -- love.graphics.setColor(Constants.colours.text_background)
-        -- love.graphics.print(text, x - bg_off, y - bg_off)
-
-        -- love.graphics.setColor(Constants.colours.text_foreground)
-        -- love.graphics.print(text, x, y)
+        love.graphics.setColor(Constants.colours.text_foreground)
+        love.graphics.print(text, x, y)
 
         if self.ai_data.draw_text_function then 
             self.ai_data.draw_text_function(self, gfx_scale)

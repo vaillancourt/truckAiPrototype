@@ -98,4 +98,8 @@ function Common.g_to_mss(g)
     return g * 9.8
 end
 
+function Common.mss_to_g(mss)
+    return mss / 9.8
+end
+
 return Common
