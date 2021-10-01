@@ -9,7 +9,7 @@ local window_width, window_height = 768, 768
 -- Main app.
 
 local waypoints = {}
-local truck = {}
+local trucks = {}
 local world = nil
 local joystick = nil
 local use_ai = true
@@ -55,14 +55,21 @@ function love.load(args)
 
     -- No gravity since we're using a "top down view"
     world = love.physics.newWorld( 0, 0, false )
-    truck = Truck.new(world, 114, 68)
+    trucks = 
+    {
+        Truck.new(world, 114, 68, 0, "first"),
+        -- Truck.new(world, 4, 38, math.pi, "second")
+    }
+
 
     local joysticks = love.joystick.getJoysticks()
     joystick = joysticks[1] or nil
 
     if use_ai then
         joystick = nil
-        truck:ai_init(waypoints)
+        for _, truck in pairs(trucks) do
+            truck:ai_init(waypoints)
+        end
     end
 end
 
@@ -116,9 +123,11 @@ function love.update(dt)
 
         if simulation_started then
             if use_ai then
-                truck:ai_update(dt)
+                for _, truck in pairs(trucks) do
+                    truck:ai_update(dt)
+                end
             else
-                truck:update_manual(dt, turn_control, brake_control, drive_control)
+                trucks[1]:update_manual(dt, turn_control, brake_control, drive_control)
             end
 
             world:update(dt)
@@ -178,11 +187,15 @@ function love.draw()
 
     draw_waypoints()
     -- draw_physics()
-    truck:draw()
+    for _, truck in pairs(trucks) do
+        truck:draw()
+    end
 
     love.graphics.pop()
 
-    truck:draw_text(gfx_scale)
+    for _, truck in pairs(trucks) do
+        truck:draw_text(gfx_scale)
+    end
 end
 
 function love.keyreleased(key)

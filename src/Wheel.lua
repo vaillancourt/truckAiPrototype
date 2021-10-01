@@ -6,8 +6,6 @@ local Phyutil = require("Phyutil")
 -- * http://www.iforce2d.net/src/iforce2d_TopdownCar.h
 
 local Wheel = {
-    x = 50,
-    y = 50,
     max_forward_speed = Common.kmh_to_mps(35),
     max_backward_speed = Common.kmh_to_mps(30),
     max_drive_force = 2,
@@ -30,9 +28,6 @@ Wheel.__index = Wheel
 
 function Wheel.new(world, x, y)
     local self = setmetatable({}, Wheel)
-
-    self.x = x or self.x
-    self.y = y or self.y
 
     self.body = love.physics.newBody( world, x, y, "dynamic" )
 

@@ -5,11 +5,6 @@ local Wheel = require("Wheel")
 
 -- Truck class
 local Truck = {
-    x = 0,
-    y = 0,
-    body = nil,
-    fixture = nil,
-    shape = nil,
 
     FRONT_LEFT = 1,
     FRONT_RIGHT = 2,
@@ -29,9 +24,6 @@ local Truck = {
         (2.0 / 2) -- truck width / 2
         - (0.25 / 2) + 0.25, -- wheel width / 2
 
-    wheels = {},
-    joints = {},
-
     -- How much can the wheels turn, on either side (i.e. [-front_angle_limit, front_angle_limit])
     -- 32.6 gives a turning radius of 9.1m
     front_angle_limit = Common.d2r(32.6),
@@ -40,21 +32,29 @@ local Truck = {
         max_accel_forward_empty = Common.g_to_mss(0.5),
         max_accel_reverse = Common.g_to_mss(0.15),
     },
-    last_frame = {
-        control = { turn = 0, brake = 0, drive = 0 },
-        speed = 0,
-    }
+    body = nil,
+    fixture = nil,
+    shape = nil,
+    wheels = nil,
+    joints = nil,
+    -- last_frame = 
+    -- {
+    --     control = { turn = 0, brake = 0, drive = 0 },
+    --     speed = 0,
+    -- }
+    last_frame = nil,
 
     }
 Truck.__index = Truck
 
-function Truck.new(world, x, y)
+function Truck.new(world, x, y, angle, name)
     local self = setmetatable({}, Truck)
 
-    self.x = x or self.x
-    self.y = y or self.y
+    self.name = name
 
-    self.body = love.physics.newBody( world, x, y, "dynamic" )
+    -- We create the object at 0, 0, then we'll move it.
+    print("self.body nil? " .. (self.body and "no" or "yes"))
+    self.body = love.physics.newBody( world, 0, 0, "dynamic" )
 
     self.shape = love.physics.newRectangleShape( self.length, self.width )
     local density = 100
@@ -63,46 +63,74 @@ function Truck.new(world, x, y)
 
     self.body:setUserData( self )
 
-    self.wheels[self.FRONT_LEFT] = Wheel.new(world, x + self.wheel_offset_x, y - self.wheel_offset_y)
-    self.wheels[self.FRONT_RIGHT] = Wheel.new(world, x + self.wheel_offset_x, y + self.wheel_offset_y)
-    self.wheels[self.REAR_LEFT] = Wheel.new(world, x - self.wheel_offset_x, y - self.wheel_offset_y)
-    self.wheels[self.REAR_RIGHT] = Wheel.new(world, x - self.wheel_offset_x, y + self.wheel_offset_y)
-
-    self.joints[self.FRONT_LEFT] = love.physics.newRevoluteJoint(
-        self.body,
-        self.wheels[self.FRONT_LEFT].body,
-        x + self.wheel_offset_x,
-        y - self.wheel_offset_y,
-        false)
-    self.joints[self.FRONT_RIGHT] = love.physics.newRevoluteJoint(
-        self.body,
-        self.wheels[self.FRONT_RIGHT].body,
-        x + self.wheel_offset_x,
-        y + self.wheel_offset_y,
-        false)
-
-    self.joints[self.REAR_LEFT] = love.physics.newRevoluteJoint(
-        self.body,
-        self.wheels[self.REAR_LEFT].body,
-        x - self.wheel_offset_x,
-        y - self.wheel_offset_y,
-        false)
-    self.joints[self.REAR_RIGHT] = love.physics.newRevoluteJoint(
-        self.body,
-        self.wheels[self.REAR_RIGHT].body,
-        x - self.wheel_offset_x,
-        y + self.wheel_offset_y,
-        false)
-
-    for _, joint in ipairs(self.joints) do
-        joint:setLimits(0, 0)
-        joint:setLimitsEnabled(true)
+    local offset = {
+        { x = self.wheel_offset_x, y = -self.wheel_offset_y },
+        { x = self.wheel_offset_x, y = self.wheel_offset_y },
+        { x = -self.wheel_offset_x, y = -self.wheel_offset_y },
+        { x = -self.wheel_offset_x, y = self.wheel_offset_y },
+    }
+    local create_and_attach_wheel = function(index) 
+        self.wheels[index] = Wheel.new(world, offset[index].x, offset[index].y)
+        self.joints[index] = love.physics.newRevoluteJoint(
+            self.body,
+            self.wheels[index].body,
+            offset[index].x,
+            offset[index].y,
+            false)
+        self.joints[index]:setLimits(0, 0)
+        self.joints[index]:setLimitsEnabled(true)
     end
 
+    self.wheels = {}
+    self.joints = {}
+    create_and_attach_wheel(self.FRONT_LEFT)
+    create_and_attach_wheel(self.FRONT_RIGHT)
+    create_and_attach_wheel(self.REAR_LEFT)
+    create_and_attach_wheel(self.REAR_RIGHT)
+
+    -- Those two joints are free to move to some degree. 
     self.joints[self.FRONT_LEFT]:setLimits(-self.front_angle_limit, self.front_angle_limit)
     self.joints[self.FRONT_RIGHT]:setLimits(-self.front_angle_limit, self.front_angle_limit)
 
-    self.wheels[self.FRONT_LEFT].debug = true
+
+    -- The object has been created, now we can rotate it. 
+    local rotated_offsets = {
+        Common.vector_rotate(offset[self.FRONT_LEFT], angle),
+        Common.vector_rotate(offset[self.FRONT_RIGHT], angle),
+        Common.vector_rotate(offset[self.REAR_LEFT], angle),
+        Common.vector_rotate(offset[self.REAR_RIGHT], angle),
+    }
+
+    self.body:setAngle(angle)
+    self.body:setPosition(x, y)
+    local replace_wheels = function(index)
+        self.wheels[index].body:setAngle(angle)
+        self.wheels[index].body:setPosition(x + rotated_offsets[index].x, y + rotated_offsets[index].y)
+    end
+
+    replace_wheels(self.FRONT_LEFT)
+    replace_wheels(self.FRONT_RIGHT)
+    replace_wheels(self.REAR_LEFT)
+    replace_wheels(self.REAR_RIGHT)
+
+    local p = function(index)
+        local xx, yy = self.wheels[index].body:getPosition()
+        print(xx .. " " .. yy)
+    end
+
+    -- p(self.FRONT_LEFT)
+    -- p(self.FRONT_RIGHT)
+    -- p(self.REAR_LEFT)
+    -- p(self.REAR_RIGHT)
+    -- print()
+
+    -- self.wheels[self.FRONT_LEFT].debug = true
+
+    self.last_frame = 
+    {
+        control = { turn = 0, brake = 0, drive = 0 },
+        speed = 0,
+    }
 
     return self
 end
@@ -163,6 +191,7 @@ function Truck.draw(self)
     love.graphics.setColor(0, 1, 0, 1)
     love.graphics.polygon("line", self.body:getWorldPoints(self.shape:getPoints()))
 
+
     self.wheels[self.FRONT_LEFT]:draw()
     self.wheels[self.FRONT_RIGHT]:draw()
     self.wheels[self.REAR_LEFT]:draw()
@@ -185,7 +214,16 @@ function Truck.draw(self)
         -- love.graphics.setColor(Constants.colours.destination_vec)
         -- love.graphics.line(x1, y1, x2, y2)
     -- end
-
+    -- local p = function(index)
+    --     local xx, yy = self.wheels[index].body:getPosition()
+    --     print(xx .. " " .. yy)
+    -- end
+    -- p(self.FRONT_LEFT)
+    -- p(self.FRONT_RIGHT)
+    -- p(self.REAR_LEFT)
+    -- p(self.REAR_RIGHT)
+    -- print(self.wheels)
+    -- print(self.name)
     if self.ai_data.draw_function then
         self.ai_data.draw_function(self)
     end

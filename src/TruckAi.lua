@@ -21,6 +21,8 @@ local task_find_destination = BehaviourTree.Task:new({
             return
         end
 
+        print("BehaviourTree.Task:new({")
+        print(obj.ai_data)
         obj.ai_data.current_destination = {}
         obj.ai_data.current_destination.index = index
         print("obj.ai_data.current_destination.index " .. obj.ai_data.current_destination.index)

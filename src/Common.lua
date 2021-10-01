@@ -36,6 +36,13 @@ function Common.vector_sub(x1, y1, x2, y2)
     return x1 - x2, y1 - y2
 end
 
+function Common.vector_rotate(v, angle_over_2pi)
+    return {
+        x = math.cos(angle_over_2pi) * v.x - math.sin(angle_over_2pi) * v.y,
+        y = math.sin(angle_over_2pi) * v.x + math.cos(angle_over_2pi) * v.y
+    }
+end
+
 function Common.vector_print(x, y, name)
     if name then
         print(name .. " (" .. x .. ", " .. y .. ")")
