@@ -47,13 +47,13 @@ end
 function Common.equivalent(v1, v2, epsilon)
     epsilon = epsilon or 0.000001
 
-    if v2 > v1 then 
-        return ((v2 - v1) <= epsilon) 
+    if v2 > v1 then
+        return ((v2 - v1) <= epsilon)
     end
-    if v1 > v2 then 
-        return ((v1 - v2) <= epsilon) 
+    if v1 > v2 then
+        return ((v1 - v2) <= epsilon)
     end
-    -- if v1 == v2 then 
+    -- if v1 == v2 then
     return true
 end
 

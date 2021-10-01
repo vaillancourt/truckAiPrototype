@@ -1,4 +1,3 @@
-local Wheel = require "Wheel"
 local Waypoint = require "Waypoint"
 local Truck = require "Truck"
 local Common = require "Common"
@@ -7,7 +6,7 @@ io.stdout:setvbuf('no') -- This makes is so that print() statements print right 
 
 local window_width, window_height = 768, 768
 
--- Main app. 
+-- Main app.
 
 local waypoints = {}
 local truck = {}
@@ -20,9 +19,9 @@ local time_scale = 4
 local FRAME_TIME = 1/60
 
 function love.load(args)
-    success = love.window.setMode(window_width, window_height, {resizable=false})
+    love.window.setMode(window_width, window_height, {resizable=false})
 
-    waypoints = 
+    waypoints =
     {
 
        Waypoint.new(101, 68),
@@ -90,12 +89,12 @@ function love.update(dt)
             dt = FRAME_TIME
         else
             time_acc = time_acc - FRAME_TIME
-            dt = FRAME_TIME            
+            dt = FRAME_TIME
         end
 
         iteration = iteration + 1
 
-        local turn_control = ((iteration % 3600) / 3600 ) 
+        local turn_control = ((iteration % 3600) / 3600 )
         local drive_control = (iteration % 480) / 480
         local brake_control = 0
 
@@ -108,7 +107,7 @@ function love.update(dt)
                 triggerleft = joystick:getGamepadAxis("triggerleft"),
                 triggerright = joystick:getGamepadAxis("triggerright")
             }
-            turn_control = Common.zero_near_zero(values.rightx) 
+            turn_control = Common.zero_near_zero(values.rightx)
             drive_control = -Common.zero_near_zero(values.lefty)
             brake_control = Common.zero_near_zero(values.triggerleft)
             --for key,value in pairs(values) do print(key,value) end
@@ -137,35 +136,14 @@ function love.update(dt)
 end
 
 
-function love.draw()
-    frame_gfx_count = frame_gfx_count + 1
-
-    if not simulation_started then
-        love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.print("Press 'space' to start the simulation.", 0, 0, 0, 1.5 )
-    end
-
-    love.graphics.push()
-    
-    love.graphics.scale(gfx_scale, gfx_scale)
-
-    draw_waypoints()
-    -- draw_physics()
-    truck:draw()
-
-    love.graphics.pop()
-
-    truck:draw_text(gfx_scale)
-end
-
-function draw_waypoints()
-    for i,v in ipairs(waypoints) do
+local function draw_waypoints()
+    for _,v in ipairs(waypoints) do
         --print(v.x .. " " .. v.y)
         v:draw()
     end
 end
 
-function draw_physics()
+local function draw_physics()
     -- https://love2d.org/wiki/Tutorial:PhysicsDrawing
 
     love.graphics.setColor(0, 1, 0, 1)
@@ -185,12 +163,35 @@ function draw_physics()
     end
 end
 
+
+function love.draw()
+    frame_gfx_count = frame_gfx_count + 1
+
+    if not simulation_started then
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.print("Press 'space' to start the simulation.", 0, 0, 0, 1.5 )
+    end
+
+    love.graphics.push()
+
+    love.graphics.scale(gfx_scale, gfx_scale)
+
+    draw_waypoints()
+    -- draw_physics()
+    truck:draw()
+
+    love.graphics.pop()
+
+    truck:draw_text(gfx_scale)
+end
+
 function love.keyreleased(key)
    if key == "escape" then
       love.event.quit()
    end
 end
 
-function love.mousepressed(x, y, button, istouch, presses)
+-- function love.mousepressed(x, y, button, istouch, presses)
+function love.mousepressed(x, y, _, _, _)
     print("       Waypoint.new(" .. math.floor(x / gfx_scale) .. ", " .. math.floor(y / gfx_scale) .. "),")
 end

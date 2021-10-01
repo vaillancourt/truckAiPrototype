@@ -1,7 +1,7 @@
 local Common = require("Common")
 local Phyutil = require("Phyutil")
 
--- This is based on 
+-- This is based on
 -- * http://www.iforce2d.net/b2dtut/top-down-car
 -- * http://www.iforce2d.net/src/iforce2d_TopdownCar.h
 
@@ -21,11 +21,11 @@ local Wheel = {
     -- Assuming the truck is facing "right"/x+
     -- the width is the width of the truck (in y)
     -- length is the length of the truck (in x)
-    width = 0.25, 
+    width = 0.25,
     length = 0.75,
-    -- this `debug` flag turns the "print" commands "on". It is designed to be used on a single 
+    -- this `debug` flag turns the "print" commands "on". It is designed to be used on a single
     -- wheel to have only data about that wheel print out
-    debug = false, } 
+    debug = false, }
 Wheel.__index = Wheel
 
 function Wheel.new(world, x, y)
@@ -62,7 +62,7 @@ function Wheel.update_friction(self, dt, brake_control)
         local impulse_x, impulse_y = self:get_lateral_velocity()
         impulse_x = impulse_x * -self.body:getMass()
         impulse_y = impulse_y * -self.body:getMass()
-        local impulse_length = Common.vector_length(impulse_x, impulse_y)
+        --local impulse_length = Common.vector_length(impulse_x, impulse_y)
 
         self.body:applyLinearImpulse( impulse_x, impulse_y )
     end
@@ -77,19 +77,21 @@ function Wheel.update_friction(self, dt, brake_control)
 
     do
         -- forward linear velocity
-        local forward_vel_x, forward_vel_y, direction = Phyutil.get_forward_velocity(self.body)
+        local forward_vel_x, forward_vel_y, _ = Phyutil.get_forward_velocity(self.body)
         local forward_dir_x, forward_dir_y, speed = Common.vector_normalize(forward_vel_x, forward_vel_y)
         if not Common.equivalent(speed, 0) then
             local drag_force_magnitude = -0.9 * self.body:getMass()
             drag_force_magnitude = drag_force_magnitude - (brake_control * self.max_brake_force)
-            --drag_force_magnitude = drag_force_magnitude - (speed / self.max_forward_speed) * (brake_control * self.max_brake_force)
+            -- drag_force_magnitude =
+            --     drag_force_magnitude
+            --     - (speed / self.max_forward_speed) * (brake_control * self.max_brake_force)
             self.body:applyForce(drag_force_magnitude * forward_dir_x, drag_force_magnitude * forward_dir_y)
         end
     end
 end
 
 --- Updates the driving of the wheel
--- 
+--
 -- @param control value in the range [-1..1]
 function Wheel.update_drive(self, dt, control)
 
@@ -98,7 +100,7 @@ function Wheel.update_drive(self, dt, control)
         desired_speed = control * self.max_forward_speed
     elseif control < 0 then
         desired_speed = control * self.max_backward_speed
-    end 
+    end
 
     local local_forward_x, local_forward_y = self.body:getWorldVector( 1, 0 )
     local forward_vel_x, forward_vel_y, direction = Phyutil.get_forward_velocity(self.body)

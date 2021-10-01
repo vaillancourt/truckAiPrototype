@@ -1,6 +1,7 @@
 local Common = require("Common")
-local Wheel = require("Wheel")
+local Constants = require("Constants")
 local TruckAi = require("TruckAi")
+local Wheel = require("Wheel")
 
 -- Truck class
 local Truck = {
@@ -21,11 +22,11 @@ local Truck = {
     width = 2.0,
     length = 4.0,
 
-    wheel_offset_x = 
-        (4.0  / 2) -- truck length / 2 
+    wheel_offset_x =
+        (4.0  / 2) -- truck length / 2
         - (0.75 / 2), -- wheel length / 2
     wheel_offset_y =
-        (2.0 / 2) -- truck width / 2 
+        (2.0 / 2) -- truck width / 2
         - (0.25 / 2) + 0.25, -- wheel width / 2
 
     wheels = {},
@@ -33,7 +34,7 @@ local Truck = {
 
     -- How much can the wheels turn, on either side (i.e. [-front_angle_limit, front_angle_limit])
     -- 32.6 gives a turning radius of 9.1m
-    front_angle_limit = Common.d2r(32.6), 
+    front_angle_limit = Common.d2r(32.6),
     robo_config = {
         max_accel_forward_full = Common.g_to_mss(0.25),
         max_accel_forward_empty = Common.g_to_mss(0.5),
@@ -47,7 +48,7 @@ local Truck = {
     }
 Truck.__index = Truck
 
-function Truck.new(world, x, y, angle_rad)
+function Truck.new(world, x, y)
     local self = setmetatable({}, Truck)
 
     self.x = x or self.x
@@ -61,34 +62,34 @@ function Truck.new(world, x, y, angle_rad)
     self.fixture:setMask(1)
 
     self.body:setUserData( self )
-    
+
     self.wheels[self.FRONT_LEFT] = Wheel.new(world, x + self.wheel_offset_x, y - self.wheel_offset_y)
     self.wheels[self.FRONT_RIGHT] = Wheel.new(world, x + self.wheel_offset_x, y + self.wheel_offset_y)
     self.wheels[self.REAR_LEFT] = Wheel.new(world, x - self.wheel_offset_x, y - self.wheel_offset_y)
     self.wheels[self.REAR_RIGHT] = Wheel.new(world, x - self.wheel_offset_x, y + self.wheel_offset_y)
 
-    self.joints[self.FRONT_LEFT] = love.physics.newRevoluteJoint( 
-        self.body, 
-        self.wheels[self.FRONT_LEFT].body, 
+    self.joints[self.FRONT_LEFT] = love.physics.newRevoluteJoint(
+        self.body,
+        self.wheels[self.FRONT_LEFT].body,
         x + self.wheel_offset_x,
         y - self.wheel_offset_y,
         false)
-    self.joints[self.FRONT_RIGHT] = love.physics.newRevoluteJoint( 
-        self.body, 
-        self.wheels[self.FRONT_RIGHT].body, 
+    self.joints[self.FRONT_RIGHT] = love.physics.newRevoluteJoint(
+        self.body,
+        self.wheels[self.FRONT_RIGHT].body,
         x + self.wheel_offset_x,
         y + self.wheel_offset_y,
         false)
 
-    self.joints[self.REAR_LEFT] = love.physics.newRevoluteJoint( 
-        self.body, 
-        self.wheels[self.REAR_LEFT].body, 
+    self.joints[self.REAR_LEFT] = love.physics.newRevoluteJoint(
+        self.body,
+        self.wheels[self.REAR_LEFT].body,
         x - self.wheel_offset_x,
         y - self.wheel_offset_y,
         false)
-    self.joints[self.REAR_RIGHT] = love.physics.newRevoluteJoint( 
-        self.body, 
-        self.wheels[self.REAR_RIGHT].body, 
+    self.joints[self.REAR_RIGHT] = love.physics.newRevoluteJoint(
+        self.body,
+        self.wheels[self.REAR_RIGHT].body,
         x - self.wheel_offset_x,
         y + self.wheel_offset_y,
         false)
@@ -110,8 +111,8 @@ end
 function Truck.update_manual(self, dt, turn_control, brake_control, drive_control)
 
     self.last_frame.control = {
-        turn = turn_control, 
-        brake = brake_control, 
+        turn = turn_control,
+        brake = brake_control,
         drive = drive_control }
 
     --print("drive_control " .. drive_control)
@@ -127,13 +128,13 @@ function Truck.update_manual(self, dt, turn_control, brake_control, drive_contro
     joint_left:setMotorEnabled(true)
     joint_right:setMotorEnabled(true)
 
-    joint_current_left = joint_left:getJointAngle()
-    joint_current_right = joint_right:getJointAngle()
+    local joint_current_left = joint_left:getJointAngle()
+    local joint_current_right = joint_right:getJointAngle()
 
-    desired_angle = turn_control * self.front_angle_limit
+    local desired_angle = turn_control * self.front_angle_limit
 
-    angle_missing_left = desired_angle - joint_current_left
-    angle_missing_right = desired_angle - joint_current_right
+    local angle_missing_left = desired_angle - joint_current_left
+    local angle_missing_right = desired_angle - joint_current_right
 
 
     joint_left:setMotorSpeed(angle_missing_left / dt)
@@ -167,9 +168,7 @@ function Truck.draw(self)
     self.wheels[self.REAR_LEFT]:draw()
     self.wheels[self.REAR_RIGHT]:draw()
 
-    function x(t) return t[1], t[2] end
-
-    if self.ai_data then
+    -- if self.ai_data then
         -- local scale_forward = 10
         -- local scale_to_target = scale_forward
 
@@ -185,9 +184,9 @@ function Truck.draw(self)
         -- y2 = y1 + y2 * scale_to_target
         -- love.graphics.setColor(Constants.colours.destination_vec)
         -- love.graphics.line(x1, y1, x2, y2)
-    end
+    -- end
 
-    if self.ai_data.draw_function then 
+    if self.ai_data.draw_function then
         self.ai_data.draw_function(self)
     end
 end
@@ -205,7 +204,6 @@ function Truck.draw_text(self, gfx_scale)
         local x1, y1 = Common.t_to_v(self.ai_data.position)
         local x, y = Common.round(x1 * gfx_scale), Common.round(y1 * gfx_scale)
         local bg_off = 2 -- background offset
-        local sc = 1
 
         local spd = Common.mps_to_kmh(self.ai_data.speed)
         local acc = Common.mss_to_g(self.ai_data.acceleration)
@@ -217,7 +215,7 @@ function Truck.draw_text(self, gfx_scale)
         love.graphics.setColor(Constants.colours.text_foreground)
         love.graphics.print(text, x, y)
 
-        if self.ai_data.draw_text_function then 
+        if self.ai_data.draw_text_function then
             self.ai_data.draw_text_function(self, gfx_scale)
         end
 

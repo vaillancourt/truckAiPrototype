@@ -1,6 +1,6 @@
 local Constants = {}
 
-Constants.colours = 
+Constants.colours =
 {
     text_foreground = {1, 1, 1, 1},
     text_background = {0, 0, 0, 1},
