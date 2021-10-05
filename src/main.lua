@@ -27,7 +27,6 @@ function love.load(args)
        Waypoint.new(101, 68),
        Waypoint.new(92, 69),
        Waypoint.new(81, 79),
-       Waypoint.new(73, 79),
        Waypoint.new(67, 80),
        -- Waypoint.new(60, 32),
        -- Waypoint.new(193, 205),
@@ -58,7 +57,7 @@ function love.load(args)
     trucks = 
     {
         Truck.new(world, 114, 68, 0, "first"),
-        -- Truck.new(world, 4, 38, math.pi, "second")
+        Truck.new(world, 4, 38, math.pi, "second")
     }
 
 
@@ -117,7 +116,6 @@ function love.update(dt)
             turn_control = Common.zero_near_zero(values.rightx)
             drive_control = -Common.zero_near_zero(values.lefty)
             brake_control = Common.zero_near_zero(values.triggerleft)
-            --for key,value in pairs(values) do print(key,value) end
         end
 
 
