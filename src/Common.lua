@@ -28,12 +28,48 @@ function Common.vector_length(x, y)
 end
 
 function Common.vector_normalize(x, y)
-    local length = Common.vector_length(x, y)
-    return x / length, y / length, length
+    if type(x) == "table" then
+        y = x.y
+        x = x.x
+        local length = Common.vector_length(x, y)
+        return {x = x / length, y = y / length}, length
+    elseif x and y then
+        local length = Common.vector_length(x, y)
+        return x / length, y / length, length
+    end
+    assert(false)
+end
+
+function Common.vector_add(x1, y1, x2, y2)
+    if type(x1) == "table" and type(y1) == "table" then
+        local v1, v2 = x1, y1
+        return {x = v1.x + v2.x, y = v1.y + v2.y}
+    elseif x1 and y1 and x2 and y2 then
+        return x1 + x2, y1 + y2
+    end
+    assert(false)
+end
+
+function Common.vector_mul(x, y, val)
+    if type(x) == "table" then
+        val = y
+        y = x.y
+        x = x.x
+        return {x = x * val, y = y * val}
+    elseif x and y and val then
+        return x * val, y * val
+    end
+    assert(false)
 end
 
 function Common.vector_sub(x1, y1, x2, y2)
-    return x1 - x2, y1 - y2
+    if type(x1) == "table" and type(y1) == "table" then
+        local v1, v2 = x1, y1
+        return {x = v1.x - v2.x, y = v1.y - v2.y}
+    elseif x1 and y1 and x2 and y2 then
+        return x1 - x2, y1 - y2
+    end
+    assert(false)
 end
 
 function Common.vector_rotate(v, angle_over_2pi)

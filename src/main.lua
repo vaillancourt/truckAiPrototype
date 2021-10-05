@@ -24,30 +24,25 @@ function love.load(args)
     waypoints =
     {
 
-       Waypoint.new(101, 68),
-       Waypoint.new(92, 69),
-       Waypoint.new(81, 79),
-       Waypoint.new(67, 80),
-       -- Waypoint.new(60, 32),
-       -- Waypoint.new(193, 205),
-
-       -- Waypoint.new(92, 40),
-       -- Waypoint.new(31, 66),
-       -- Waypoint.new(92, 66),
-       -- -- Waypoint.new(42, 187),
-       -- -- Waypoint.new(74, 233),
-       -- -- Waypoint.new(180, 239),
-       -- -- Waypoint.new(103, 199),
-       -- -- Waypoint.new(172, 138),
-       -- -- Waypoint.new(219, 29),
-       -- -- Waypoint.new(228, 218),
-       -- -- Waypoint.new(214, 80),
-       -- -- Waypoint.new(111, 53),
-       -- -- Waypoint.new(88, 184),
-       -- --Waypoint.new(39, 224),
-       -- Waypoint.new(37, 13),
+       Waypoint.new(104, 80, "reverse"),
+       Waypoint.new(84, 80, "reverse"),
+       Waypoint.new(63, 86, "reverse"),
+       -- Waypoint.new(44, 86, "reverse"),
+       -- Waypoint.new(37, 87, "reverse"),
     }
 
+    local wp1, wp2 = Waypoint.generate_bucket_waypoint( {x = 34, y = 86}, {x = 27, y = 87} , "from_left")
+    table.insert(waypoints, wp1)
+    table.insert(waypoints, wp2)
+    table.insert(waypoints, Waypoint.new(63, 86, "forward"))
+    wp1, wp2 = Waypoint.generate_bucket_waypoint( {x = 34, y = 87}, {x = 27, y = 88} , "from_left")
+    table.insert(waypoints, wp1)
+    table.insert(waypoints, wp2)
+    table.insert(waypoints,Waypoint.new(63, 86, "forward"))
+    wp1, wp2 = Waypoint.generate_bucket_waypoint( {x = 33, y = 85}, {x = 26, y = 86} , "from_left")
+    table.insert(waypoints, wp1)
+    table.insert(waypoints, wp2)
+    
     for k, v in ipairs(waypoints) do
         v.index = k
     end
@@ -56,8 +51,8 @@ function love.load(args)
     world = love.physics.newWorld( 0, 0, false )
     trucks = 
     {
-        Truck.new(world, 114, 68, 0, "first"),
-        Truck.new(world, 4, 38, math.pi, "second")
+        Truck.new(world, 120, 80, 0, "first"),
+        -- Truck.new(world, 104, 38, math.pi, "second")
     }
 
 

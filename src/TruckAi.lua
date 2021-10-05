@@ -186,6 +186,132 @@ local function get_task_reach_destination_reverse()
   return task_reach_destination_reverse
 end
 
+local function get_task_reach_destination()
+  local task_reach_destination = BehaviourTree.Task:new({
+      name = "task_reach_destination",
+      run = function(task, obj)
+
+          local ai = obj.ai_data
+
+          local truck_x, truck_y = Common.t_to_v(ai.position)
+          local to_target_x, to_target_y = Common.vector_sub(
+              ai.current_destination.x,
+              ai.current_destination.y,
+              truck_x,
+              truck_y)
+          local dist_to_target = Common.vector_length(to_target_x, to_target_y)
+
+          if dist_to_target < ai.waypoints[ai.current_destination.index].radius then
+              task:success()
+              return
+          end
+
+          if ai.waypoints[ai.current_destination.index]:get_arrive_direction() == "forward" then
+              -- Calculating the angle of the wheels
+              local local_forward_x, local_forward_y = obj.body:getWorldVector( 1, 0 )
+              local to_target_x_normalized, to_target_y_normalized = Common.vector_normalize(to_target_x, to_target_y)
+              local truck_angle = math.atan2(local_forward_y, local_forward_x)
+              local desired_angle = math.atan2(to_target_y, to_target_x)
+              local angle_diff = desired_angle - truck_angle
+              local angle_clamped = Common.clamp_between(angle_diff, -obj.front_angle_limit, obj.front_angle_limit)
+              local angle_ratio = angle_clamped / obj.front_angle_limit
+
+              local drive_control = 1
+              local brake_control = 0
+
+
+              do
+                  -- Calculating the drive_control
+
+                  -- Limit the acceleration
+                  --print("(obj.last_frame.control.drive or nil) " .. (obj.last_frame.control.drive or "nil"))
+                  if ai.acceleration < obj.robo_config.max_accel_forward_empty then
+                    drive_control = (obj.last_frame.control.drive or 0) + 0.01
+                  elseif ai.acceleration > obj.robo_config.max_accel_forward_empty then
+                    drive_control = (obj.last_frame.control.drive or 0) - 0.1
+                  end
+
+                  -- https://www.physicsclassroom.com/class/1DKin/Lesson-6/Kinematic-Equations
+                  -- vf^2 = vi^2 + 2*a*d
+                  -- 2*a*d = vf^2 - vi^2
+                  -- d = (vf^2 - vi^2) / (2 * a)
+
+                  local vfSq = 0
+                  local viSq = ai.speed * ai.speed
+                  local a = -obj.robo_config.max_accel_forward_empty
+                  local distance_to_stop_at_allowed_rate = vfSq - viSq / (2 * a)
+                  if dist_to_target < 2*distance_to_stop_at_allowed_rate then
+                    drive_control = 0
+                    brake_control = 0.75
+                  end
+                  drive_control = Common.clamp_between(drive_control, 0, 1)
+              end
+
+              local turn_control = angle_ratio -- We've made this [-1..1]
+              obj:update_manual(ai.dt, turn_control, brake_control, drive_control)
+
+              ai.destination = { ai.current_destination.x, ai.current_destination.y }
+              ai.local_forward = { local_forward_x, local_forward_y }
+              ai.local_to_target = { to_target_x_normalized, to_target_y_normalized }
+
+              task:running()
+          elseif ai.waypoints[ai.current_destination.index]:get_arrive_direction() == "reverse" then
+              -- Calculating the angle of the wheels
+              local local_reverse_x, local_reverse_y = obj.body:getWorldVector( -1, 0 )
+              local to_target_x_normalized, to_target_y_normalized = Common.vector_normalize(to_target_x, to_target_y)
+              local truck_angle = Common.over_2pi(math.atan2(local_reverse_y, local_reverse_x))
+              local desired_angle = Common.over_2pi(math.atan2(to_target_y, to_target_x))
+              local angle_diff = Common.over_2pi(desired_angle - truck_angle)
+              local angle_diff_neg = Common.from_over_2pi_to_minus_pi_to_pi(angle_diff)
+              local angle_clamped = Common.clamp_between(angle_diff_neg, -obj.front_angle_limit, obj.front_angle_limit)
+              local angle_ratio = -angle_clamped / obj.front_angle_limit
+
+              local drive_control = -1
+              local brake_control = 0
+
+              do
+                  -- Calculating the drive_control
+
+                  -- Limit the acceleration
+                  if -obj.robo_config.max_accel_reverse < ai.acceleration  then
+                    drive_control = (obj.last_frame.control.drive or 0) - 0.01
+                  elseif ai.acceleration < -obj.robo_config.max_accel_reverse then
+                    drive_control = (obj.last_frame.control.drive or 0) + 0.1
+                  end
+
+                  -- https://www.physicsclassroom.com/class/1DKin/Lesson-6/Kinematic-Equations
+                  -- vf^2 = vi^2 + 2*a*d
+                  -- 2*a*d = vf^2 - vi^2
+                  -- d = (vf^2 - vi^2) / (2 * a)
+
+                  local vfSq = 0
+                  local viSq = ai.speed * ai.speed
+                  local a = -obj.robo_config.max_accel_forward_empty
+                  local distance_to_stop_at_allowed_rate = vfSq - viSq / (2 * a)
+
+                  if dist_to_target < 2*distance_to_stop_at_allowed_rate then
+                    drive_control = 0
+                    brake_control = 0.75
+                  end
+                  drive_control = Common.clamp_between(drive_control, -1, 0)
+              end
+
+              local turn_control = angle_ratio -- We've made this [-1..1]
+              obj:update_manual(ai.dt, turn_control, brake_control, drive_control)
+
+              local local_forward_x, local_forward_y = obj.body:getWorldVector( 1, 0 )
+              ai.destination = { ai.current_destination.x, ai.current_destination.y }
+              ai.local_forward = { local_forward_x, local_forward_y }
+              ai.local_to_target = { to_target_x_normalized, to_target_y_normalized }
+
+              task:running()
+          end
+      end
+  })
+
+  return task_reach_destination
+end
+
 local function get_task_idle()
   local task_idle = BehaviourTree.Task:new({
     name = "task_idle",
@@ -215,7 +341,7 @@ local function get_truck_tree()
             name = "movingSequence",
             nodes = {
               get_task_find_destination(),
-              get_task_reach_destination_reverse()
+              get_task_reach_destination()
             }
           })
         }),
