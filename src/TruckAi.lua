@@ -20,6 +20,7 @@ local function get_task_find_destination()
 
           if index > #obj.ai_data.waypoints then
               -- We've reached the final waypoint, remove the destination.
+              print("task_find_destination fail")
               task:fail()
               return
           end
@@ -29,6 +30,7 @@ local function get_task_find_destination()
             x = obj.ai_data.waypoints[index].x,
             y = obj.ai_data.waypoints[index].y
           }
+          print("task_find_destination success")
           task:success()
       end
   })
@@ -77,10 +79,8 @@ local function get_task_reach_destination_forward()
               --print("(obj.last_frame.control.drive or nil) " .. (obj.last_frame.control.drive or "nil"))
               if ai.acceleration < obj.robo_config.max_accel_forward_empty then
                 drive_control = (obj.last_frame.control.drive or 0) + 0.01
-                print("accel " .. ai.acceleration .. " < " .. obj.robo_config.max_accel_forward_empty)
               elseif ai.acceleration > obj.robo_config.max_accel_forward_empty then
                 drive_control = (obj.last_frame.control.drive or 0) - 0.1
-                print("deaccel " .. ai.acceleration .. " > " .. obj.robo_config.max_accel_forward_empty)
               end
 
               -- https://www.physicsclassroom.com/class/1DKin/Lesson-6/Kinematic-Equations
@@ -152,10 +152,8 @@ local function get_task_reach_destination_reverse()
               -- Limit the acceleration
               if -obj.robo_config.max_accel_reverse < ai.acceleration  then
                 drive_control = (obj.last_frame.control.drive or 0) - 0.01
-                print("accel " .. ai.acceleration .. " < " .. obj.robo_config.max_accel_reverse)
               elseif ai.acceleration < -obj.robo_config.max_accel_reverse then
                 drive_control = (obj.last_frame.control.drive or 0) + 0.1
-                print("deaccel " .. ai.acceleration .. " > " .. obj.robo_config.max_accel_reverse)
               end
 
               -- https://www.physicsclassroom.com/class/1DKin/Lesson-6/Kinematic-Equations
@@ -194,6 +192,7 @@ local function get_task_idle()
   local task_idle = BehaviourTree.Task:new({
     name = "task_idle",
     run = function(task, obj)
+      print("Idle..")
       local turn_control = 0
       local brake_control = 1
       local drive_control = 0
