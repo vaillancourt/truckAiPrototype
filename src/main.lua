@@ -57,7 +57,7 @@ function love.load(args)
     trucks = 
     {
         Truck.new(world, 114, 68, 0, "first"),
-        --Truck.new(world, 4, 38, math.pi, "second")
+        Truck.new(world, 4, 38, math.pi, "second")
     }
 
 

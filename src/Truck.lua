@@ -53,7 +53,6 @@ function Truck.new(world, x, y, angle, name)
     self.name = name
 
     -- We create the object at 0, 0, then we'll move it.
-    print("self.body nil? " .. (self.body and "no" or "yes"))
     self.body = love.physics.newBody( world, 0, 0, "dynamic" )
 
     self.shape = love.physics.newRectangleShape( self.length, self.width )

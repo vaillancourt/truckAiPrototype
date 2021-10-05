@@ -20,7 +20,6 @@ local function get_task_find_destination()
 
           if index > #obj.ai_data.waypoints then
               -- We've reached the final waypoint, remove the destination.
-              print("task_find_destination fail")
               task:fail()
               return
           end
@@ -30,7 +29,6 @@ local function get_task_find_destination()
             x = obj.ai_data.waypoints[index].x,
             y = obj.ai_data.waypoints[index].y
           }
-          print("task_find_destination success")
           task:success()
       end
   })
@@ -192,7 +190,6 @@ local function get_task_idle()
   local task_idle = BehaviourTree.Task:new({
     name = "task_idle",
     run = function(task, obj)
-      print("Idle..")
       local turn_control = 0
       local brake_control = 1
       local drive_control = 0
@@ -202,7 +199,7 @@ local function get_task_idle()
     end
   })
 
-  return task_ide
+  return task_idle
 end
 
 
